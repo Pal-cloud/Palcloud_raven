@@ -67,14 +67,58 @@
 
     <!-- Menú fullscreen lateral -->
     <div class="mobile-menu" id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menú de navegación">
+
+      <!-- Cabecera del panel -->
+      <div class="mobile-menu__head">
+        <img src="assets/images/logo-pal.png" alt="" class="mobile-menu__head-logo" />
+        <span class="mobile-menu__head-title">Palcloud · Raven</span>
+      </div>
+
       <ul role="list">
-        <li><a href="#about"        class="mobile-menu__link">Manifiesto</a></li>
-        <li><a href="#skills"       class="mobile-menu__link">Oficio</a></li>
-        <li><a href="#projects"     class="mobile-menu__link">Obra</a></li>
-        <li><a href="#process"      class="mobile-menu__link">Proceso</a></li>
-        <li><a href="#github-stats" class="mobile-menu__link">GitHub</a></li>
-        <li><a href="#contact"      class="mobile-menu__link">Contacto</a></li>
+        <li>
+          <a href="#about" class="mobile-menu__link" data-menu-section="about">
+            <span class="mobile-menu__link-bar"></span>
+            <span class="mobile-menu__link-name">Manifiesto</span>
+            <span class="mobile-menu__link-desc">¿Quién soy?</span>
+          </a>
+        </li>
+        <li>
+          <a href="#skills" class="mobile-menu__link" data-menu-section="skills">
+            <span class="mobile-menu__link-bar"></span>
+            <span class="mobile-menu__link-name">Oficio</span>
+            <span class="mobile-menu__link-desc">Tecnologías &amp; herramientas</span>
+          </a>
+        </li>
+        <li>
+          <a href="#projects" class="mobile-menu__link" data-menu-section="projects">
+            <span class="mobile-menu__link-bar"></span>
+            <span class="mobile-menu__link-name">Obra</span>
+            <span class="mobile-menu__link-desc">Proyectos seleccionados</span>
+          </a>
+        </li>
+        <li>
+          <a href="#process" class="mobile-menu__link" data-menu-section="process">
+            <span class="mobile-menu__link-bar"></span>
+            <span class="mobile-menu__link-name">Proceso</span>
+            <span class="mobile-menu__link-desc">Cómo trabajo</span>
+          </a>
+        </li>
+        <li>
+          <a href="#github-stats" class="mobile-menu__link" data-menu-section="github-stats">
+            <span class="mobile-menu__link-bar"></span>
+            <span class="mobile-menu__link-name">GitHub</span>
+            <span class="mobile-menu__link-desc">Actividad en tiempo real</span>
+          </a>
+        </li>
+        <li>
+          <a href="#contact" class="mobile-menu__link" data-menu-section="contact">
+            <span class="mobile-menu__link-bar"></span>
+            <span class="mobile-menu__link-name">Contacto</span>
+            <span class="mobile-menu__link-desc">Hablemos de tu proyecto</span>
+          </a>
+        </li>
       </ul>
+
       <div class="mobile-menu__footer">
         <a href="https://github.com/Pal-cloud" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
         <a href="https://linkedin.com"         target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
@@ -462,6 +506,7 @@
   <script src="js/counter.js"       defer></script>
   <script src="js/form.js"          defer></script>
   <script src="js/sound.js"         defer></script>
+  <script src="js/ui-sounds.js"     defer></script>
   <script src="js/github-charts.js" defer></script>
   <script src="js/main.js"          defer></script>
 </body>

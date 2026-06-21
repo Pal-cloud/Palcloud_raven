@@ -1,10 +1,233 @@
 /**
- * sound.js — Lluvia nocturna bohemia
- * Técnica: ruido blanco filtrado para lluvia + gotas individuales
- *          + pad drone muy suave de fondo + reverb de sala
- * Sin síntesis de cuervo, sin pad estridente — solo agua y noche.
+ * sound.js — Amanecer forestal · Canto de pájaros sintético
+ * Técnica: síntesis FM para gorjeos, trinos y silbidos
+ *          + ambiente de bosque (ruido filtrado) + reverb natural
  */
 'use strict';
+
+(function initSound() {
+  const btn  = document.getElementById('sound-toggle');
+  const icon = document.getElementById('sound-icon');
+  if (!btn) return;
+
+  let ctx       = null;
+  let master    = null;
+  let isPlaying = false;
+  let stopFns   = [];
+
+  function build() {
+    ctx    = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain();
+    master.gain.setValueAtTime(0, ctx.currentTime);
+    master.connect(ctx.destination);
+
+    const reverb = makeReverb(ctx, 3.5, 2.2);
+
+    const dryBus = ctx.createGain();
+    dryBus.gain.value = 0.50;
+    dryBus.connect(master);
+
+    const wetBus = ctx.createGain();
+    wetBus.gain.value = 0.50;
+    reverb.connect(wetBus);
+    wetBus.connect(master);
+
+    // 1 · Ambiente forestal suave (viento entre hojas)
+    const forestStop = buildForest(dryBus);
+
+    // 2 · Cuatro "pájaros" distintos a intervalos aleatorios
+    const stops = [
+      buildBirdScheduler(dryBus, wetBus, 2500,  7000, 'chirp'),
+      buildBirdScheduler(dryBus, wetBus, 3500, 10000, 'warble'),
+      buildBirdScheduler(dryBus, wetBus, 1800,  6500, 'call'),
+      buildBirdScheduler(dryBus, wetBus, 4000, 12000, 'whistle'),
+    ];
+
+    stopFns = [forestStop, ...stops];
+  }
+
+  // ─── Ambiente: viento entre hojas ──────────
+  function buildForest(out) {
+    const buf = makeNoiseBuf(ctx, 5);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop   = true;
+
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 1600;
+
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 5500;
+
+    // LFO muy lento → ráfaga de viento
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.035;
+    const lfoG = ctx.createGain();
+    lfoG.gain.value = 900;
+    lfo.connect(lfoG);
+    lfoG.connect(lp.frequency);
+    lfo.start();
+
+    const vol = ctx.createGain();
+    vol.gain.value = 0.028;
+
+    src.connect(hp); hp.connect(lp); lp.connect(vol); vol.connect(out);
+    src.start();
+
+    return () => { try { src.stop(); lfo.stop(); } catch(_){} };
+  }
+
+  // ─── Planificador de pájaros ────────────────
+  function buildBirdScheduler(dry, wet, minMs, maxMs, type) {
+    let timer = null;
+    function schedule() {
+      if (!isPlaying) return;
+      const delay = minMs + Math.random() * (maxMs - minMs);
+      timer = setTimeout(() => {
+        if (isPlaying && ctx) { playBird(dry, wet, type); schedule(); }
+      }, delay);
+    }
+    schedule();
+    return () => { clearTimeout(timer); timer = null; };
+  }
+
+  // ─── Cantos sintéticos ──────────────────────
+  function playBird(dry, wet, type) {
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    switch (type) {
+      case 'chirp':   // gorjeo rápido doble
+        chirp(dry, wet, 2400, 3600, 0.09, now);
+        chirp(dry, wet, 2100, 3200, 0.07, now + 0.14);
+        break;
+      case 'warble':  // trino de canario — vibrato rápido
+        warble(dry, wet, 2900 + Math.random() * 400, 0.14, now);
+        break;
+      case 'call':    // llamada de dos notas descendente
+        chirp(dry, wet, 1700, 1200, 0.13, now, 0.22);
+        chirp(dry, wet, 1900, 1400, 0.09, now + 0.32, 0.18);
+        break;
+      case 'whistle': // silbido ascendente largo
+        chirp(dry, wet, 900, 1900, 0.11, now, 0.38);
+        break;
+    }
+  }
+
+  // Barrido de frecuencia (chirp individual)
+  function chirp(dry, wet, fStart, fEnd, vol, when, dur = 0.13) {
+    const osc  = ctx.createOscillator();
+    const osc2 = ctx.createOscillator(); // armónico suave
+
+    osc.type  = 'sine';
+    osc2.type = 'sine';
+    osc.frequency.setValueAtTime(fStart, when);
+    osc.frequency.exponentialRampToValueAtTime(fEnd, when + dur);
+    osc2.frequency.setValueAtTime(fStart * 2.01, when);
+    osc2.frequency.exponentialRampToValueAtTime(fEnd * 2.01, when + dur);
+
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0.0001, when);
+    env.gain.linearRampToValueAtTime(vol,    when + 0.012);
+    env.gain.setValueAtTime(vol,             when + dur * 0.65);
+    env.gain.exponentialRampToValueAtTime(0.0001, when + dur + 0.025);
+
+    const hGain = ctx.createGain();
+    hGain.gain.value = 0.18;
+
+    osc.connect(env);
+    osc2.connect(hGain); hGain.connect(env);
+    env.connect(dry); env.connect(wet);
+
+    osc.start(when);  osc2.start(when);
+    osc.stop(when + dur + 0.05); osc2.stop(when + dur + 0.05);
+  }
+
+  // Vibrato rápido tipo canario
+  function warble(dry, wet, centerFreq, vol, when) {
+    const dur = 0.22 + Math.random() * 0.18;
+    const osc = ctx.createOscillator();
+    osc.type  = 'sine';
+    osc.frequency.value = centerFreq;
+
+    const lfo  = ctx.createOscillator();
+    lfo.type   = 'sine';
+    lfo.frequency.value = 13 + Math.random() * 9;
+    const lfoG = ctx.createGain();
+    lfoG.gain.value = centerFreq * 0.07;
+    lfo.connect(lfoG); lfoG.connect(osc.frequency);
+
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0.0001, when);
+    env.gain.linearRampToValueAtTime(vol,    when + 0.025);
+    env.gain.setValueAtTime(vol,             when + dur - 0.04);
+    env.gain.exponentialRampToValueAtTime(0.0001, when + dur + 0.03);
+
+    osc.connect(env); env.connect(dry); env.connect(wet);
+    osc.start(when); lfo.start(when);
+    osc.stop(when + dur + 0.05); lfo.stop(when + dur + 0.05);
+  }
+
+  // ─── Utilidades ─────────────────────────────
+  function makeReverb(ctx, secs, decay) {
+    const conv = ctx.createConvolver();
+    const len  = ctx.sampleRate * secs;
+    const ir   = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) {
+      const ch = ir.getChannelData(c);
+      for (let i = 0; i < len; i++)
+        ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+    }
+    conv.buffer = ir;
+    return conv;
+  }
+
+  function makeNoiseBuf(ctx, secs) {
+    const len = ctx.sampleRate * secs;
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const ch  = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+    return buf;
+  }
+
+  function fadeIn() {
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+    master.gain.linearRampToValueAtTime(0.60, ctx.currentTime + 3.5);
+  }
+
+  function fadeOut() {
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+    master.gain.linearRampToValueAtTime(0, ctx.currentTime + 2.2);
+    setTimeout(() => {
+      stopFns.forEach(f => f()); stopFns = [];
+      if (ctx) { ctx.close(); ctx = null; master = null; }
+    }, 2500);
+  }
+
+  // ─── Toggle ─────────────────────────────────
+  btn.addEventListener('click', async () => {
+    if (!isPlaying) {
+      if (!ctx) build();
+      if (ctx.state === 'suspended') await ctx.resume();
+      fadeIn();
+      isPlaying = true;
+      icon.className = 'fa-solid fa-dove';
+      btn.title = 'Silenciar canto';
+      btn.setAttribute('aria-label', 'Silenciar');
+    } else {
+      isPlaying = false;
+      icon.className = 'fa-solid fa-volume-xmark';
+      btn.title = 'Activar canto de pájaros';
+      btn.setAttribute('aria-label', 'Activar sonido');
+      fadeOut();
+    }
+  });
+
+})();
+
 
 (function initSound() {
   const btn  = document.getElementById('sound-toggle');

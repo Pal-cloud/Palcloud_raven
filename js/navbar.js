@@ -1,7 +1,96 @@
 /**
- * navbar.js — Navegación: hamburguer overlay fullscreen (siempre visible)
+ * navbar.js — Navegación: hamburger overlay fullscreen (siempre visible)
  */
 'use strict';
+
+(function initNavbar() {
+  const { $, $$, throttle } = window.PalcloudUtils;
+
+  const navbar      = $('#navbar');
+  const hamburger   = $('#hamburger');
+  const mobileMenu  = $('#mobile-menu');
+  const navOverlay  = $('#nav-overlay');
+  const navLinks    = $$('.navbar__link');
+  const mobileLinks = $$('.mobile-menu__link');
+
+  if (!navbar) return;
+
+  // ── Scroll ──────────────────────────────────
+  const onScroll = throttle(() => {
+    navbar.classList.toggle('scrolled', window.scrollY > 40);
+    updateActiveLink();
+  }, 80);
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  // ── Active link por sección visible ─────────
+  const sections = $$('section[id]');
+
+  function updateActiveLink() {
+    const scrollY = window.scrollY + 140;
+    let current = '';
+
+    sections.forEach((section) => {
+      if (scrollY >= section.offsetTop) current = section.id;
+    });
+
+    // Links del navbar horizontal (si los hubiera)
+    navLinks.forEach((link) => {
+      link.classList.toggle('active', link.dataset.section === current);
+    });
+
+    // Links del menú overlay → is-active
+    mobileLinks.forEach((link) => {
+      const sec = link.dataset.menuSection || link.getAttribute('href')?.replace('#', '');
+      link.classList.toggle('is-active', sec === current);
+    });
+  }
+
+  // ── Hamburger / Overlay ──────────────────────
+  if (hamburger && mobileMenu) {
+    hamburger.addEventListener('click', () => {
+      const isOpen = hamburger.classList.toggle('open');
+      mobileMenu.classList.toggle('open', isOpen);
+      navOverlay?.classList.toggle('open', isOpen);
+      hamburger.setAttribute('aria-expanded', String(isOpen));
+      mobileMenu.setAttribute('aria-hidden', String(!isOpen));
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+
+      if (isOpen) {
+        const first = mobileMenu.querySelector('.mobile-menu__link');
+        setTimeout(() => first?.focus(), 100);
+      }
+    });
+
+    mobileLinks.forEach((link) => link.addEventListener('click', closeMenu));
+    navOverlay?.addEventListener('click', closeMenu);
+  }
+
+  function closeMenu() {
+    hamburger?.classList.remove('open');
+    mobileMenu?.classList.remove('open');
+    navOverlay?.classList.remove('open');
+    hamburger?.setAttribute('aria-expanded', 'false');
+    mobileMenu?.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  window._navCloseMenu = closeMenu;
+
+  // ── Smooth scroll ────────────────────────────
+  [...navLinks, ...mobileLinks].forEach((link) => {
+    link.addEventListener('click', (e) => {
+      const href = link.getAttribute('href');
+      if (href?.startsWith('#')) {
+        e.preventDefault();
+        document.querySelector(href)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  updateActiveLink();
+})();
+
 
 (function initNavbar() {
   const { $, $$, throttle } = window.PalcloudUtils;
