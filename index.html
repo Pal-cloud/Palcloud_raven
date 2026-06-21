@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Palcloud Raven — Portfolio personal. Desarrollador creativo especializado en diseño, código y experiencias digitales únicas." />
+  <meta name="keywords" content="portfolio, desarrollador, frontend, backend, diseño, creativo, raven" />
+  <meta name="author" content="Palcloud Raven" />
+
+  <!-- Open Graph / Social Preview -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Palcloud Raven — Portfolio" />
+  <meta property="og:description" content="Desarrollador creativo. Código, diseño y experiencias digitales únicas." />
+  <meta property="og:image" content="assets/images/og-preview.png" />
+
+  <title>Palcloud Raven — Portfolio</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body data-theme="dark">
+
+  <!-- ═══════════════════════════════════════════
+       CURSOR PERSONALIZADO
+  ═══════════════════════════════════════════ -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-follower" id="cursor-follower"></div>
+
+  <!-- ═══════════════════════════════════════════
+       LOADER
+  ═══════════════════════════════════════════ -->
+  <div class="loader" id="loader">
+    <div class="loader__inner">
+      <div class="loader__raven">
+        <!-- SVG Cuervo Placeholder — reemplaza src con tu logo -->
+        <img
+          src="assets/images/raven-logo.svg"
+          alt="Palcloud Raven Logo"
+          class="loader__logo"
+          id="logo-placeholder"
+          onerror="this.style.display='none'; document.getElementById('loader-fallback').style.display='flex'"
+        />
+        <!-- Fallback SVG si no hay logo aún -->
+        <div id="loader-fallback" style="display:none;" class="loader__fallback">
+          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" width="80" height="80">
+            <circle cx="60" cy="60" r="58" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 4"/>
+            <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
+                  font-family="Space Grotesk, sans-serif" font-size="36" fill="var(--accent)">🪶</text>
+          </svg>
+        </div>
+      </div>
+      <div class="loader__bar">
+        <div class="loader__fill" id="loader-fill"></div>
+      </div>
+      <p class="loader__text" id="loader-text">Iniciando...</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       NAVBAR
+  ═══════════════════════════════════════════ -->
+  <header class="navbar" id="navbar">
+    <nav class="navbar__inner container" aria-label="Navegación principal">
+
+      <!-- Logo -->
+      <a href="#hero" class="navbar__brand" aria-label="Ir al inicio">
+        <img
+          src="assets/images/raven-logo.svg"
+          alt="Palcloud Raven"
+          class="navbar__logo"
+          onerror="this.outerHTML='<span class=\'navbar__logo-text\'>PALCLOUD<span>🪶</span></span>'"
+        />
+      </a>
+
+      <!-- Desktop Menu -->
+      <ul class="navbar__menu" role="list">
+        <li><a href="#about"    class="navbar__link" data-section="about">Sobre mí</a></li>
+        <li><a href="#skills"   class="navbar__link" data-section="skills">Skills</a></li>
+        <li><a href="#projects" class="navbar__link" data-section="projects">Proyectos</a></li>
+        <li><a href="#process"  class="navbar__link" data-section="process">Proceso</a></li>
+        <li><a href="#contact"  class="navbar__link" data-section="contact">Contacto</a></li>
+      </ul>
+
+      <!-- Theme Toggle + Hamburger -->
+      <div class="navbar__actions">
+        <button class="btn-icon" id="theme-toggle" aria-label="Cambiar tema">
+          <i class="fa-solid fa-moon" id="theme-icon"></i>
+        </button>
+        <button class="hamburger" id="hamburger" aria-label="Abrir menú" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile Drawer -->
+    <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+      <ul role="list">
+        <li><a href="#about"    class="mobile-menu__link">Sobre mí</a></li>
+        <li><a href="#skills"   class="mobile-menu__link">Skills</a></li>
+        <li><a href="#projects" class="mobile-menu__link">Proyectos</a></li>
+        <li><a href="#process"  class="mobile-menu__link">Proceso</a></li>
+        <li><a href="#contact"  class="mobile-menu__link">Contacto</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════
+       HERO
+  ═══════════════════════════════════════════ -->
+  <main>
+    <section class="hero" id="hero" aria-label="Presentación">
+      <!-- Fondo partículas canvas -->
+      <canvas class="hero__canvas" id="hero-canvas" aria-hidden="true"></canvas>
+
+      <!-- Glow orbs decorativos -->
+      <div class="orb orb--1" aria-hidden="true"></div>
+      <div class="orb orb--2" aria-hidden="true"></div>
+
+      <div class="hero__content container">
+        <div class="hero__badge reveal-up">
+          <span class="badge">✦ Disponible para proyectos</span>
+        </div>
+
+        <h1 class="hero__title reveal-up">
+          <span class="hero__title-line">Creativo.</span>
+          <span class="hero__title-line">Preciso.</span>
+          <span class="hero__title-line hero__title-accent" id="typewriter"></span>
+        </h1>
+
+        <p class="hero__subtitle reveal-up">
+          Diseño y desarrollo experiencias digitales que combinan
+          <em>estética audaz</em> con <em>código limpio</em>.
+          Cada pixel y cada línea tienen un propósito.
+        </p>
+
+        <div class="hero__cta reveal-up">
+          <a href="#projects" class="btn btn--primary">
+            Ver mis proyectos
+            <i class="fa-solid fa-arrow-down-long"></i>
+          </a>
+          <a href="#contact" class="btn btn--ghost">
+            Hablemos
+            <i class="fa-solid fa-paper-plane"></i>
+          </a>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="hero__scroll reveal-up" aria-hidden="true">
+          <div class="scroll-indicator">
+            <div class="scroll-indicator__dot"></div>
+          </div>
+          <span>scroll</span>
+        </div>
+      </div>
+
+      <!-- Stats flotantes -->
+      <div class="hero__stats reveal-right">
+        <div class="stat-card">
+          <span class="stat-card__number" data-target="3">0</span>
+          <span class="stat-card__label">Años de experiencia</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__number" data-target="20">0</span>
+          <span class="stat-card__label">Proyectos completados</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__number" data-target="100">0</span>
+          <span class="stat-card__label">% dedicación</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         ABOUT
+    ═══════════════════════════════════════════ -->
+    <section class="about section" id="about" aria-label="Sobre mí">
+      <div class="container">
+        <div class="section-header reveal-up">
+          <p class="section-tag">// 01 — Sobre mí</p>
+          <h2 class="section-title">La mente detrás <br/><span class="text-accent">del cuervo</span></h2>
+        </div>
+
+        <div class="about__grid">
+          <!-- Imagen / Avatar -->
+          <div class="about__visual reveal-left">
+            <div class="about__photo-wrapper">
+              <!-- Reemplaza con tu foto -->
+              <img
+                src="assets/images/avatar.jpg"
+                alt="Foto de perfil de Palcloud Raven"
+                class="about__photo"
+                loading="lazy"
+                onerror="this.outerHTML='<div class=\'about__photo-fallback\'><i class=\'fa-solid fa-user\'></i></div>'"
+              />
+              <div class="about__photo-ring" aria-hidden="true"></div>
+              <div class="about__photo-badge">
+                <img src="assets/images/raven-logo.svg" alt="" aria-hidden="true"
+                     onerror="this.outerHTML='🪶'"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- Texto bio -->
+          <div class="about__content reveal-right">
+            <p class="about__intro">
+              Hola, soy <strong>Palcloud Raven</strong> — desarrollador y diseñador digital
+              con una visión clara: crear productos que sean tan <em>funcionales</em> como
+              <em>hermosos</em>.
+            </p>
+            <p class="about__text">
+              Me apasiona la intersección entre el código y el arte visual. Trabajo con
+              tecnologías modernas del frontend y el backend, siempre buscando la solución
+              más elegante a cada problema.
+            </p>
+            <p class="about__text">
+              Cuando no estoy frente a la pantalla, busco inspiración en la naturaleza,
+              la música y la arquitectura. El cuervo — símbolo de inteligencia, adaptación
+              y misterio — representa mi filosofía de trabajo.
+            </p>
+
+            <div class="about__values">
+              <div class="value-chip"><i class="fa-solid fa-code"></i> Clean Code</div>
+              <div class="value-chip"><i class="fa-solid fa-palette"></i> UI/UX Design</div>
+              <div class="value-chip"><i class="fa-solid fa-bolt"></i> Performance</div>
+              <div class="value-chip"><i class="fa-solid fa-mobile-screen"></i> Mobile-First</div>
+              <div class="value-chip"><i class="fa-solid fa-lock"></i> Seguridad</div>
+              <div class="value-chip"><i class="fa-solid fa-leaf"></i> Accesibilidad</div>
+            </div>
+
+            <a href="#contact" class="btn btn--primary btn--sm">
+              Descarga mi CV <i class="fa-solid fa-file-arrow-down"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         SKILLS
+    ═══════════════════════════════════════════ -->
+    <section class="skills section" id="skills" aria-label="Habilidades técnicas">
+      <div class="container">
+        <div class="section-header reveal-up">
+          <p class="section-tag">// 02 — Stack técnico</p>
+          <h2 class="section-title">Tecnologías que <br/><span class="text-accent">domino</span></h2>
+        </div>
+
+        <div class="skills__tabs reveal-up" role="tablist" aria-label="Categorías de skills">
+          <button class="tab active" data-tab="frontend" role="tab" aria-selected="true">Frontend</button>
+          <button class="tab" data-tab="backend"  role="tab" aria-selected="false">Backend</button>
+          <button class="tab" data-tab="tools"    role="tab" aria-selected="false">Herramientas</button>
+          <button class="tab" data-tab="design"   role="tab" aria-selected="false">Diseño</button>
+        </div>
+
+        <!-- Frontend -->
+        <div class="skills__panel active" data-panel="frontend" role="tabpanel">
+          <div class="skills__grid">
+            <div class="skill-card reveal-up" data-level="95">
+              <div class="skill-card__icon"><i class="fa-brands fa-html5" style="color:#e34f26"></i></div>
+              <span class="skill-card__name">HTML5</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="95"></div></div>
+            </div>
+            <div class="skill-card reveal-up" data-level="90">
+              <div class="skill-card__icon"><i class="fa-brands fa-css3-alt" style="color:#1572b6"></i></div>
+              <span class="skill-card__name">CSS3 / SASS</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="90"></div></div>
+            </div>
+            <div class="skill-card reveal-up" data-level="88">
+              <div class="skill-card__icon"><i class="fa-brands fa-js" style="color:#f7df1e"></i></div>
+              <span class="skill-card__name">JavaScript ES6+</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="88"></div></div>
+            </div>
+            <div class="skill-card reveal-up" data-level="85">
+              <div class="skill-card__icon"><i class="fa-brands fa-react" style="color:#61dafb"></i></div>
+              <span class="skill-card__name">React / Next.js</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="85"></div></div>
+            </div>
+            <div class="skill-card reveal-up" data-level="80">
+              <div class="skill-card__icon" style="color:#41b883"><b>Vue</b></div>
+              <span class="skill-card__name">Vue.js / Nuxt</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="80"></div></div>
+            </div>
+            <div class="skill-card reveal-up" data-level="82">
+              <div class="skill-card__icon" style="color:#3178c6"><b>TS</b></div>
+              <span class="skill-card__name">TypeScript</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="82"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Backend -->
+        <div class="skills__panel" data-panel="backend" role="tabpanel">
+          <div class="skills__grid">
+            <div class="skill-card reveal-up" data-level="85">
+              <div class="skill-card__icon"><i class="fa-brands fa-node-js" style="color:#339933"></i></div>
+              <span class="skill-card__name">Node.js / Express</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="85"></div></div>
+            </div>
+            <div class="skill-card reveal-up" data-level="80">
+              <div class="skill-card__icon"><i class="fa-brands fa-python" style="color:#3776ab"></i></div>
+              <span class="skill-card__name">Python / FastAPI</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="80"></div></div>
+            </div>
+            <div class="skill-card reveal-up" data-level="75">
+              <div class="skill-card__icon" style="color:#cc0000"><b>PHP</b></div>
+              <span class="skill-card__name">PHP / Laravel</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="75"></div></div>
+            </div>
+            <div class="skill-card reveal-up" data-level="78">
+              <div class="skill-card__icon" style="color:#47a248"><i class="fa-solid fa-database"></i></div>
+              <span class="skill-card__name">MongoDB / SQL</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="78"></div></div>
+            </div>
+            <div class="skill-card reveal-up" data-level="70">
+              <div class="skill-card__icon" style="color:#ff6600"><b>API</b></div>
+              <span class="skill-card__name">REST / GraphQL</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="70"></div></div>
+            </div>
+            <div class="skill-card reveal-up" data-level="72">
+              <div class="skill-card__icon"><i class="fa-brands fa-aws" style="color:#ff9900"></i></div>
+              <span class="skill-card__name">AWS / Cloud</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="72"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tools -->
+        <div class="skills__panel" data-panel="tools" role="tabpanel">
+          <div class="skills__grid">
+            <div class="skill-card reveal-up">
+              <div class="skill-card__icon"><i class="fa-brands fa-git-alt" style="color:#f05032"></i></div>
+              <span class="skill-card__name">Git / GitHub</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="92"></div></div>
+            </div>
+            <div class="skill-card reveal-up">
+              <div class="skill-card__icon"><i class="fa-brands fa-docker" style="color:#2496ed"></i></div>
+              <span class="skill-card__name">Docker</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="75"></div></div>
+            </div>
+            <div class="skill-card reveal-up">
+              <div class="skill-card__icon" style="color:#f5a623"><i class="fa-solid fa-bolt"></i></div>
+              <span class="skill-card__name">Vite / Webpack</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="85"></div></div>
+            </div>
+            <div class="skill-card reveal-up">
+              <div class="skill-card__icon" style="color:#06b6d4"><b>TW</b></div>
+              <span class="skill-card__name">Tailwind CSS</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="90"></div></div>
+            </div>
+            <div class="skill-card reveal-up">
+              <div class="skill-card__icon"><i class="fa-solid fa-flask" style="color:#a855f7"></i></div>
+              <span class="skill-card__name">Jest / Testing</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="70"></div></div>
+            </div>
+            <div class="skill-card reveal-up">
+              <div class="skill-card__icon"><i class="fa-brands fa-linux" style="color:#fcc624"></i></div>
+              <span class="skill-card__name">Linux / CLI</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="80"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Design -->
+        <div class="skills__panel" data-panel="design" role="tabpanel">
+          <div class="skills__grid">
+            <div class="skill-card reveal-up">
+              <div class="skill-card__icon" style="color:#f24e1e"><i class="fa-brands fa-figma"></i></div>
+              <span class="skill-card__name">Figma</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="88"></div></div>
+            </div>
+            <div class="skill-card reveal-up">
+              <div class="skill-card__icon" style="color:#ff61f6"><b>Ps</b></div>
+              <span class="skill-card__name">Photoshop</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="82"></div></div>
+            </div>
+            <div class="skill-card reveal-up">
+              <div class="skill-card__icon" style="color:#ff9a00"><b>Ai</b></div>
+              <span class="skill-card__name">Illustrator</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="78"></div></div>
+            </div>
+            <div class="skill-card reveal-up">
+              <div class="skill-card__icon" style="color:#0acf83"><b>Fr</b></div>
+              <span class="skill-card__name">Framer / Motion</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="75"></div></div>
+            </div>
+            <div class="skill-card reveal-up">
+              <div class="skill-card__icon" style="color:#ff6584"><i class="fa-solid fa-pen-nib"></i></div>
+              <span class="skill-card__name">UI / Branding</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="85"></div></div>
+            </div>
+            <div class="skill-card reveal-up">
+              <div class="skill-card__icon" style="color:#a8edea"><i class="fa-solid fa-sitemap"></i></div>
+              <span class="skill-card__name">UX Research</span>
+              <div class="skill-card__bar"><div class="skill-card__fill" data-pct="72"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         PROJECTS
+    ═══════════════════════════════════════════ -->
+    <section class="projects section" id="projects" aria-label="Proyectos destacados">
+      <div class="container">
+        <div class="section-header reveal-up">
+          <p class="section-tag">// 03 — Proyectos</p>
+          <h2 class="section-title">Trabajos que <br/><span class="text-accent">me enorgullecen</span></h2>
+        </div>
+
+        <!-- Filtros -->
+        <div class="projects__filters reveal-up" role="group" aria-label="Filtrar proyectos">
+          <button class="filter-btn active" data-filter="all">Todos</button>
+          <button class="filter-btn" data-filter="web">Web App</button>
+          <button class="filter-btn" data-filter="design">Diseño</button>
+          <button class="filter-btn" data-filter="mobile">Mobile</button>
+        </div>
+
+        <!-- Grid Proyectos -->
+        <div class="projects__grid" id="projects-grid">
+
+          <article class="project-card reveal-up" data-category="web" tabindex="0">
+            <div class="project-card__image">
+              <img src="assets/images/project-1.jpg" alt="Proyecto 1 — Dashboard Analytics" loading="lazy"
+                   onerror="this.parentElement.classList.add('project-card__image--empty')"/>
+              <div class="project-card__overlay">
+                <a href="#" class="btn btn--sm btn--primary" target="_blank" rel="noopener">
+                  <i class="fa-solid fa-eye"></i> Ver demo
+                </a>
+                <a href="#" class="btn btn--sm btn--ghost" target="_blank" rel="noopener">
+                  <i class="fa-brands fa-github"></i> Código
+                </a>
+              </div>
+            </div>
+            <div class="project-card__body">
+              <div class="project-card__tags">
+                <span class="tag">React</span><span class="tag">Node.js</span><span class="tag">MongoDB</span>
+              </div>
+              <h3 class="project-card__title">Dashboard Analytics</h3>
+              <p class="project-card__desc">
+                Plataforma de visualización de datos en tiempo real con gráficas interactivas,
+                autenticación JWT y panel de administración completo.
+              </p>
+            </div>
+            <div class="project-card__footer">
+              <span class="project-card__type web">Web App</span>
+              <span class="project-card__year">2025</span>
+            </div>
+          </article>
+
+          <article class="project-card project-card--featured reveal-up" data-category="design" tabindex="0">
+            <div class="project-card__image">
+              <img src="assets/images/project-2.jpg" alt="Proyecto 2 — Brand Identity" loading="lazy"
+                   onerror="this.parentElement.classList.add('project-card__image--empty')"/>
+              <div class="project-card__overlay">
+                <a href="#" class="btn btn--sm btn--primary" target="_blank" rel="noopener">
+                  <i class="fa-solid fa-eye"></i> Ver proyecto
+                </a>
+                <a href="#" class="btn btn--sm btn--ghost" target="_blank" rel="noopener">
+                  <i class="fa-brands fa-figma"></i> Figma
+                </a>
+              </div>
+            </div>
+            <div class="project-card__body">
+              <div class="project-card__tags">
+                <span class="tag">Figma</span><span class="tag">Branding</span><span class="tag">UI System</span>
+              </div>
+              <h3 class="project-card__title">Brand Identity System</h3>
+              <p class="project-card__desc">
+                Sistema de identidad visual completo: logotipo, paleta de color, tipografía,
+                componentes UI y guía de uso para startup tecnológica.
+              </p>
+            </div>
+            <div class="project-card__footer">
+              <span class="project-card__type design">Diseño</span>
+              <span class="project-card__year">2025</span>
+            </div>
+          </article>
+
+          <article class="project-card reveal-up" data-category="mobile" tabindex="0">
+            <div class="project-card__image">
+              <img src="assets/images/project-3.jpg" alt="Proyecto 3 — App Móvil" loading="lazy"
+                   onerror="this.parentElement.classList.add('project-card__image--empty')"/>
+              <div class="project-card__overlay">
+                <a href="#" class="btn btn--sm btn--primary" target="_blank" rel="noopener">
+                  <i class="fa-solid fa-eye"></i> Ver demo
+                </a>
+                <a href="#" class="btn btn--sm btn--ghost" target="_blank" rel="noopener">
+                  <i class="fa-brands fa-github"></i> Código
+                </a>
+              </div>
+            </div>
+            <div class="project-card__body">
+              <div class="project-card__tags">
+                <span class="tag">React Native</span><span class="tag">Firebase</span>
+              </div>
+              <h3 class="project-card__title">Tracker App</h3>
+              <p class="project-card__desc">
+                Aplicación móvil de seguimiento de hábitos con notificaciones push,
+                estadísticas semanales y sincronización en la nube.
+              </p>
+            </div>
+            <div class="project-card__footer">
+              <span class="project-card__type mobile">Mobile</span>
+              <span class="project-card__year">2024</span>
+            </div>
+          </article>
+
+          <article class="project-card reveal-up" data-category="web" tabindex="0">
+            <div class="project-card__image">
+              <img src="assets/images/project-4.jpg" alt="Proyecto 4 — E-Commerce" loading="lazy"
+                   onerror="this.parentElement.classList.add('project-card__image--empty')"/>
+              <div class="project-card__overlay">
+                <a href="#" class="btn btn--sm btn--primary" target="_blank" rel="noopener">
+                  <i class="fa-solid fa-eye"></i> Ver demo
+                </a>
+              </div>
+            </div>
+            <div class="project-card__body">
+              <div class="project-card__tags">
+                <span class="tag">Next.js</span><span class="tag">Stripe</span><span class="tag">Prisma</span>
+              </div>
+              <h3 class="project-card__title">E-Commerce Full Stack</h3>
+              <p class="project-card__desc">
+                Tienda online con carrito, pagos con Stripe, panel de vendedor,
+                SEO optimizado y rendimiento Lighthouse 98+.
+              </p>
+            </div>
+            <div class="project-card__footer">
+              <span class="project-card__type web">Web App</span>
+              <span class="project-card__year">2024</span>
+            </div>
+          </article>
+
+          <article class="project-card reveal-up" data-category="design" tabindex="0">
+            <div class="project-card__image">
+              <img src="assets/images/project-5.jpg" alt="Proyecto 5 — Portfolio Design" loading="lazy"
+                   onerror="this.parentElement.classList.add('project-card__image--empty')"/>
+              <div class="project-card__overlay">
+                <a href="#" class="btn btn--sm btn--primary" target="_blank" rel="noopener">
+                  <i class="fa-solid fa-eye"></i> Ver proyecto
+                </a>
+              </div>
+            </div>
+            <div class="project-card__body">
+              <div class="project-card__tags">
+                <span class="tag">CSS</span><span class="tag">GSAP</span><span class="tag">Canvas</span>
+              </div>
+              <h3 class="project-card__title">Portfolio Interactivo</h3>
+              <p class="project-card__desc">
+                Portfolio con animaciones canvas, cursor personalizado, modo claro/oscuro
+                y micro-interacciones que realzan la experiencia de usuario.
+              </p>
+            </div>
+            <div class="project-card__footer">
+              <span class="project-card__type design">Diseño</span>
+              <span class="project-card__year">2026</span>
+            </div>
+          </article>
+
+          <article class="project-card reveal-up" data-category="web" tabindex="0">
+            <div class="project-card__image">
+              <img src="assets/images/project-6.jpg" alt="Proyecto 6 — API REST" loading="lazy"
+                   onerror="this.parentElement.classList.add('project-card__image--empty')"/>
+              <div class="project-card__overlay">
+                <a href="#" class="btn btn--sm btn--ghost" target="_blank" rel="noopener">
+                  <i class="fa-brands fa-github"></i> Código
+                </a>
+              </div>
+            </div>
+            <div class="project-card__body">
+              <div class="project-card__tags">
+                <span class="tag">Python</span><span class="tag">FastAPI</span><span class="tag">Docker</span>
+              </div>
+              <h3 class="project-card__title">Microservices API</h3>
+              <p class="project-card__desc">
+                Arquitectura de microservicios con autenticación OAuth2, rate limiting,
+                documentación OpenAPI y despliegue en contenedores Docker.
+              </p>
+            </div>
+            <div class="project-card__footer">
+              <span class="project-card__type web">Web App</span>
+              <span class="project-card__year">2024</span>
+            </div>
+          </article>
+
+        </div><!-- /projects__grid -->
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         PROCESS
+    ═══════════════════════════════════════════ -->
+    <section class="process section" id="process" aria-label="Mi proceso de trabajo">
+      <div class="container">
+        <div class="section-header reveal-up">
+          <p class="section-tag">// 04 — Proceso</p>
+          <h2 class="section-title">Cómo <span class="text-accent">trabajo</span></h2>
+        </div>
+
+        <div class="process__timeline">
+          <div class="process__step reveal-up">
+            <div class="process__icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <div class="process__content">
+              <span class="process__num">01</span>
+              <h3>Descubrimiento</h3>
+              <p>Escucho, investigo y entiendo el problema antes de escribir una sola línea de código. Las mejores soluciones nacen de las preguntas correctas.</p>
+            </div>
+          </div>
+          <div class="process__step reveal-up">
+            <div class="process__icon"><i class="fa-solid fa-pen-ruler"></i></div>
+            <div class="process__content">
+              <span class="process__num">02</span>
+              <h3>Diseño & Prototipo</h3>
+              <p>Creo wireframes y prototipos interactivos en Figma. Itero rápido, fallo rápido y valido con usuarios antes de construir.</p>
+            </div>
+          </div>
+          <div class="process__step reveal-up">
+            <div class="process__icon"><i class="fa-solid fa-code"></i></div>
+            <div class="process__content">
+              <span class="process__num">03</span>
+              <h3>Desarrollo</h3>
+              <p>Código limpio, componentizado y documentado. Sigo principios SOLID, DRY y patrones de diseño probados por la industria.</p>
+            </div>
+          </div>
+          <div class="process__step reveal-up">
+            <div class="process__icon"><i class="fa-solid fa-vial-circle-check"></i></div>
+            <div class="process__content">
+              <span class="process__num">04</span>
+              <h3>Testing & QA</h3>
+              <p>Tests unitarios, de integración y e2e. Reviso accesibilidad, rendimiento y seguridad antes de cada entrega.</p>
+            </div>
+          </div>
+          <div class="process__step reveal-up">
+            <div class="process__icon"><i class="fa-solid fa-rocket"></i></div>
+            <div class="process__content">
+              <span class="process__num">05</span>
+              <h3>Lanzamiento & Soporte</h3>
+              <p>Despliegue CI/CD, monitoreo en producción y soporte post-lanzamiento. El producto no termina al entregar, evoluciona.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         CONTACT
+    ═══════════════════════════════════════════ -->
+    <section class="contact section" id="contact" aria-label="Contacto">
+      <div class="container">
+        <div class="section-header reveal-up">
+          <p class="section-tag">// 05 — Contacto</p>
+          <h2 class="section-title">¿Tienes un proyecto <br/><span class="text-accent">en mente?</span></h2>
+          <p class="section-desc">Estoy disponible para proyectos freelance, colaboraciones y oportunidades a tiempo completo. Hablemos.</p>
+        </div>
+
+        <div class="contact__grid">
+          <!-- Info -->
+          <div class="contact__info reveal-left">
+            <div class="contact__links">
+              <a href="mailto:hola@palcloudraven.dev" class="contact-link">
+                <div class="contact-link__icon"><i class="fa-solid fa-envelope"></i></div>
+                <div>
+                  <span class="contact-link__label">Email</span>
+                  <span class="contact-link__value">hola@palcloudraven.dev</span>
+                </div>
+              </a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener" class="contact-link">
+                <div class="contact-link__icon"><i class="fa-brands fa-linkedin-in"></i></div>
+                <div>
+                  <span class="contact-link__label">LinkedIn</span>
+                  <span class="contact-link__value">/in/palcloudraven</span>
+                </div>
+              </a>
+              <a href="https://github.com" target="_blank" rel="noopener" class="contact-link">
+                <div class="contact-link__icon"><i class="fa-brands fa-github"></i></div>
+                <div>
+                  <span class="contact-link__label">GitHub</span>
+                  <span class="contact-link__value">@palcloudraven</span>
+                </div>
+              </a>
+              <a href="https://twitter.com" target="_blank" rel="noopener" class="contact-link">
+                <div class="contact-link__icon"><i class="fa-brands fa-x-twitter"></i></div>
+                <div>
+                  <span class="contact-link__label">X / Twitter</span>
+                  <span class="contact-link__value">@palcloudraven</span>
+                </div>
+              </a>
+            </div>
+
+            <div class="availability-badge reveal-up">
+              <span class="dot dot--green"></span>
+              Disponible para nuevos proyectos
+            </div>
+          </div>
+
+          <!-- Formulario -->
+          <form class="contact__form reveal-right" id="contact-form" novalidate>
+            <div class="form-group">
+              <label for="name" class="form-label">Nombre *</label>
+              <input type="text" id="name" name="name" class="form-input" placeholder="Tu nombre completo" required autocomplete="name" />
+              <span class="form-error" id="name-error"></span>
+            </div>
+            <div class="form-group">
+              <label for="email" class="form-label">Email *</label>
+              <input type="email" id="email" name="email" class="form-input" placeholder="tu@email.com" required autocomplete="email" />
+              <span class="form-error" id="email-error"></span>
+            </div>
+            <div class="form-group">
+              <label for="subject" class="form-label">Asunto</label>
+              <select id="subject" name="subject" class="form-input form-select">
+                <option value="">Selecciona un asunto...</option>
+                <option value="proyecto">Nuevo proyecto</option>
+                <option value="colaboracion">Colaboración</option>
+                <option value="trabajo">Oportunidad laboral</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="message" class="form-label">Mensaje *</label>
+              <textarea id="message" name="message" class="form-input form-textarea" placeholder="Cuéntame sobre tu proyecto..." rows="5" required></textarea>
+              <span class="form-error" id="message-error"></span>
+            </div>
+            <button type="submit" class="btn btn--primary btn--full" id="submit-btn">
+              <span class="btn__text">Enviar mensaje</span>
+              <i class="fa-solid fa-paper-plane"></i>
+              <span class="btn__spinner" aria-hidden="true"></span>
+            </button>
+            <div class="form-success" id="form-success" aria-live="polite"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ═══════════════════════════════════════════
+       FOOTER
+  ═══════════════════════════════════════════ -->
+  <footer class="footer" aria-label="Pie de página">
+    <div class="container">
+      <div class="footer__inner">
+        <div class="footer__brand">
+          <img src="assets/images/raven-logo.svg" alt="Palcloud Raven"
+               class="footer__logo"
+               onerror="this.outerHTML='<span class=\'footer__logo-text\'>🪶 PALCLOUD RAVEN</span>'"/>
+          <p class="footer__tagline">Código que vuela, diseño que perdura.</p>
+        </div>
+
+        <nav class="footer__nav" aria-label="Navegación del footer">
+          <a href="#about">Sobre mí</a>
+          <a href="#skills">Skills</a>
+          <a href="#projects">Proyectos</a>
+          <a href="#contact">Contacto</a>
+        </nav>
+
+        <div class="footer__social">
+          <a href="https://github.com" target="_blank" rel="noopener" aria-label="GitHub">
+            <i class="fa-brands fa-github"></i>
+          </a>
+          <a href="https://linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn">
+            <i class="fa-brands fa-linkedin-in"></i>
+          </a>
+          <a href="https://twitter.com" target="_blank" rel="noopener" aria-label="X / Twitter">
+            <i class="fa-brands fa-x-twitter"></i>
+          </a>
+          <a href="mailto:hola@palcloudraven.dev" aria-label="Email">
+            <i class="fa-solid fa-envelope"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="footer__bottom">
+        <p>
+          &copy; <span id="year"></span> Palcloud Raven — Diseñado y construido con
+          <i class="fa-solid fa-heart" style="color:var(--accent)"></i>
+          y mucho café.
+        </p>
+        <button class="back-to-top" id="back-to-top" aria-label="Volver arriba">
+          <i class="fa-solid fa-arrow-up"></i>
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/utils.js"       defer></script>
+  <script src="js/loader.js"      defer></script>
+  <script src="js/navbar.js"      defer></script>
+  <script src="js/cursor.js"      defer></script>
+  <script src="js/canvas.js"      defer></script>
+  <script src="js/animations.js"  defer></script>
+  <script src="js/typewriter.js"  defer></script>
+  <script src="js/skills.js"      defer></script>
+  <script src="js/projects.js"    defer></script>
+  <script src="js/counter.js"     defer></script>
+  <script src="js/form.js"        defer></script>
+  <script src="js/theme.js"       defer></script>
+  <script src="js/main.js"        defer></script>
+</body>
+</html>

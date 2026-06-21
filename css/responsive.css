@@ -1,0 +1,218 @@
+/* ══════════════════════════════════════════
+   RESPONSIVE — Mobile-First Design System
+   Breakpoints:
+   - xs:  < 480px    (small phones)
+   - sm:  480–767px  (phones)
+   - md:  768–1023px (tablets)
+   - lg:  1024–1279px (laptops)
+   - xl:  ≥ 1280px   (desktops)
+══════════════════════════════════════════ */
+
+/* ─── TABLET: md ─────────────────────────── */
+@media (max-width: 1023px) {
+
+  /* Navbar */
+  .navbar__menu { display: none; }
+  .hamburger    { display: flex; }
+  .mobile-menu  { display: block; }
+
+  /* Hero stats */
+  .hero__stats {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0 var(--container-pad) var(--space-10);
+    gap: var(--space-3);
+  }
+
+  .stat-card {
+    text-align: center;
+    min-width: unset;
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-4px);
+  }
+
+  /* About */
+  .about__grid {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .about__content {
+    align-items: center;
+  }
+
+  .about__intro,
+  .about__text {
+    text-align: left;
+  }
+
+  .about__values {
+    justify-content: center;
+  }
+
+  /* Contact */
+  .contact__grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Projects featured */
+  .project-card--featured {
+    grid-column: span 1;
+  }
+
+  /* Process */
+  .process__timeline::before {
+    left: 36px;
+  }
+}
+
+/* ─── PHONE: sm ──────────────────────────── */
+@media (max-width: 767px) {
+
+  /* Hero */
+  .hero__content {
+    gap: var(--space-5);
+    padding-block: var(--space-10) var(--space-6);
+  }
+
+  .hero__cta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero__cta .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero__scroll {
+    display: none;
+  }
+
+  /* About */
+  .about__photo-wrapper {
+    width: clamp(180px, 60vw, 260px);
+  }
+
+  /* Skills */
+  .skills__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Projects */
+  .projects__grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Process */
+  .process__step {
+    flex-direction: column;
+    padding-left: var(--space-10);
+  }
+
+  .process__timeline::before {
+    left: 16px;
+  }
+
+  .process__icon {
+    width: 56px;
+    height: 56px;
+    font-size: 1.1rem;
+  }
+
+  /* Footer */
+  .footer__inner {
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .footer__bottom {
+    flex-direction: column-reverse;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-4);
+  }
+
+  /* Cursor — deshabilitado en touch */
+  .cursor, .cursor-follower {
+    display: none;
+  }
+
+  /* Section titles */
+  .section-title br {
+    display: none;
+  }
+}
+
+/* ─── SMALL PHONE: xs ───────────────────── */
+@media (max-width: 479px) {
+
+  .skills__tabs {
+    gap: var(--space-1);
+  }
+
+  .tab {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-xs);
+  }
+
+  .skills__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero__stats {
+    flex-direction: column;
+  }
+
+  .filter-btn {
+    font-size: var(--text-xs);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .btn {
+    font-size: var(--text-xs);
+    padding: var(--space-3) var(--space-4);
+  }
+}
+
+/* ─── DESKTOP LARGE ─────────────────────── */
+@media (min-width: 1280px) {
+
+  .projects__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .project-card--featured {
+    grid-column: span 2;
+  }
+}
+
+/* ─── ULTRA-WIDE ────────────────────────── */
+@media (min-width: 1600px) {
+  :root {
+    --container-max: 1440px;
+  }
+}
+
+/* ─── PRINT ─────────────────────────────── */
+@media print {
+  .navbar, .loader, .cursor, .cursor-follower,
+  .hero__canvas, .orb, .back-to-top {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+
+  .section {
+    break-inside: avoid;
+  }
+}

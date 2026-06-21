@@ -1,0 +1,109 @@
+/* ══════════════════════════════════════════
+   ANIMATIONS & KEYFRAMES
+══════════════════════════════════════════ */
+
+/* ─── KEYFRAMES ──────────────────────────── */
+@keyframes floatGently {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+@keyframes orbDrift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(30px, -20px) scale(1.08); }
+}
+
+@keyframes ringRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes scrollBounce {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50%       { transform: translateY(14px); opacity: 0.3; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2); }
+  50%       { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.05); }
+}
+
+@keyframes glitch {
+  0%   { clip-path: inset(0 0 96% 0); transform: translate(-2px); }
+  10%  { clip-path: inset(45% 0 40% 0); transform: translate(2px); }
+  20%  { clip-path: inset(70% 0 15% 0); transform: translate(-1px); }
+  30%  { clip-path: inset(10% 0 80% 0); transform: translate(3px); }
+  100% { clip-path: inset(0 0 100% 0); transform: translate(0); }
+}
+
+@keyframes typewriterCursor {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ─── REVEAL (Intersection Observer) ─────── */
+.reveal-up,
+.reveal-left,
+.reveal-right,
+.reveal-fade {
+  opacity: 0;
+  transition: opacity 0.8s cubic-bezier(0.4,0,0.2,1),
+              transform 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+.reveal-up    { transform: translateY(40px); }
+.reveal-left  { transform: translateX(-40px); }
+.reveal-right { transform: translateX(40px); }
+.reveal-fade  { transform: none; }
+
+.reveal-up.visible,
+.reveal-left.visible,
+.reveal-right.visible,
+.reveal-fade.visible {
+  opacity: 1;
+  transform: translate(0);
+}
+
+/* Stagger delays */
+.reveal-up:nth-child(2) { transition-delay: 100ms; }
+.reveal-up:nth-child(3) { transition-delay: 200ms; }
+.reveal-up:nth-child(4) { transition-delay: 300ms; }
+.reveal-up:nth-child(5) { transition-delay: 400ms; }
+.reveal-up:nth-child(6) { transition-delay: 500ms; }
+
+/* Stagger explícito para skill cards */
+.skills__grid .skill-card:nth-child(1) { transition-delay: 0ms; }
+.skills__grid .skill-card:nth-child(2) { transition-delay: 80ms; }
+.skills__grid .skill-card:nth-child(3) { transition-delay: 160ms; }
+.skills__grid .skill-card:nth-child(4) { transition-delay: 240ms; }
+.skills__grid .skill-card:nth-child(5) { transition-delay: 320ms; }
+.skills__grid .skill-card:nth-child(6) { transition-delay: 400ms; }
+
+/* ─── PREFERENCE: reducir movimiento ─────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal-up,
+  .reveal-left,
+  .reveal-right,
+  .reveal-fade {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

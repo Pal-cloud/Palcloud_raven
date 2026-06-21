@@ -1,0 +1,156 @@
+/* ══════════════════════════════════════════
+   DESIGN TOKENS — VARIABLES CSS
+   Sistema de diseño centralizado
+══════════════════════════════════════════ */
+
+/* ─── TEMA OSCURO (default) ─────────────── */
+[data-theme="dark"], :root {
+  /* Fondo */
+  --bg-primary:    #0a0a0f;
+  --bg-secondary:  #111118;
+  --bg-card:       #16161f;
+  --bg-card-hover: #1c1c28;
+  --bg-glass:      rgba(22, 22, 31, 0.75);
+
+  /* Acento — púrpura raven */
+  --accent:        #9b5de5;
+  --accent-light:  #b87eff;
+  --accent-dark:   #7338c8;
+  --accent-glow:   rgba(155, 93, 229, 0.35);
+  --accent-rgb:    155, 93, 229;
+
+  /* Texto */
+  --text-primary:   #f0f0f8;
+  --text-secondary: #8888aa;
+  --text-muted:     #555570;
+  --text-on-accent: #ffffff;
+
+  /* Bordes */
+  --border:       rgba(155, 93, 229, 0.18);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(155, 93, 229, 0.45);
+
+  /* UI Elements */
+  --input-bg:  rgba(255,255,255,0.04);
+  --tag-bg:    rgba(155, 93, 229, 0.15);
+
+  /* Colores de estado */
+  --success: #22c55e;
+  --error:   #ef4444;
+  --warning: #f59e0b;
+  --info:    #3b82f6;
+
+  /* Category colors */
+  --color-web:    #9b5de5;
+  --color-design: #f97316;
+  --color-mobile: #06b6d4;
+
+  /* Sombras */
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.3);
+  --shadow-md:  0 8px 32px rgba(0,0,0,0.4);
+  --shadow-lg:  0 20px 60px rgba(0,0,0,0.5);
+  --shadow-accent: 0 0 40px rgba(155,93,229,0.25);
+
+  /* Gradientes */
+  --gradient-accent:    linear-gradient(135deg, var(--accent), var(--accent-light));
+  --gradient-hero:      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(155,93,229,0.3) 0%, transparent 70%);
+  --gradient-card:      linear-gradient(145deg, var(--bg-card), rgba(22,22,31,0.5));
+  --gradient-text:      linear-gradient(135deg, var(--accent-light) 0%, #ff79c6 100%);
+
+  /* Tipografía */
+  --font-sans: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Space Mono', 'Fira Code', monospace;
+
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.25rem;
+  --text-5xl:  3rem;
+  --text-6xl:  3.75rem;
+  --text-7xl:  4.5rem;
+
+  /* Espaciado */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Layout */
+  --container-max: 1280px;
+  --container-pad: clamp(1.25rem, 5vw, 2.5rem);
+
+  /* Radios */
+  --radius-sm:   6px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+  --radius-xl:   32px;
+  --radius-full: 9999px;
+
+  /* Transiciones */
+  --transition-fast:   150ms cubic-bezier(0.4,0,0.2,1);
+  --transition-base:   300ms cubic-bezier(0.4,0,0.2,1);
+  --transition-slow:   600ms cubic-bezier(0.4,0,0.2,1);
+  --transition-spring: 400ms cubic-bezier(0.34,1.56,0.64,1);
+
+  /* Navbar */
+  --navbar-h: 70px;
+  --navbar-bg: rgba(10, 10, 15, 0.88);
+
+  /* Z-index layers */
+  --z-below:   -1;
+  --z-base:     1;
+  --z-raised:  10;
+  --z-overlay: 100;
+  --z-modal:   200;
+  --z-toast:   300;
+  --z-cursor:  400;
+  --z-loader:  500;
+}
+
+/* ─── TEMA CLARO ─────────────────────────── */
+[data-theme="light"] {
+  --bg-primary:    #f8f7ff;
+  --bg-secondary:  #ffffff;
+  --bg-card:       #ffffff;
+  --bg-card-hover: #f0effe;
+  --bg-glass:      rgba(255,255,255,0.8);
+
+  --accent:        #7338c8;
+  --accent-light:  #9b5de5;
+  --accent-dark:   #5621a3;
+  --accent-glow:   rgba(115,56,200,0.2);
+  --accent-rgb:    115, 56, 200;
+
+  --text-primary:   #1a1a2e;
+  --text-secondary: #555570;
+  --text-muted:     #9999aa;
+  --text-on-accent: #ffffff;
+
+  --border:        rgba(115, 56, 200, 0.2);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-hover:  rgba(115, 56, 200, 0.4);
+
+  --input-bg:  rgba(0,0,0,0.04);
+  --tag-bg:    rgba(115, 56, 200, 0.1);
+
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md:  0 8px 32px rgba(0,0,0,0.1);
+  --shadow-lg:  0 20px 60px rgba(0,0,0,0.15);
+  --shadow-accent: 0 0 40px rgba(115,56,200,0.2);
+
+  --gradient-hero: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(115,56,200,0.15) 0%, transparent 70%);
+
+  --navbar-bg: rgba(248,247,255,0.88);
+}
