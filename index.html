@@ -9,6 +9,10 @@
   <meta property="og:description" content="Donde el código se convierte en arte." />
   <title>Palcloud Raven</title>
 
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/images/logo-pal.png" />
+  <link rel="apple-touch-icon" href="assets/images/logo-pal.png" />
+
   <!-- Fuentes: dramática serif + mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -43,7 +47,7 @@
   <header class="navbar" id="navbar">
     <nav class="navbar__inner container" aria-label="Navegación principal">
       <a href="#hero" class="navbar__brand" aria-label="Inicio">
-        <img src="assets/images/logo-pal.png" alt="Palcloud Raven" class="navbar__logo" />
+        <img src="assets/images/logo-pal.png" alt="Palcloud Raven" class="navbar__logo js-logo" />
       </a>
       <ul class="navbar__menu" role="list">
         <li><a href="#about"    class="navbar__link" data-section="about">Manifiesto</a></li>
@@ -53,7 +57,22 @@
         <li><a href="#contact"  class="navbar__link" data-section="contact">Contacto</a></li>
       </ul>
       <div class="navbar__actions">
-        <button class="btn-icon" id="sound-toggle" aria-label="Activar lluvia ambiente" title="Lluvia nocturna · clic para activar">
+        <!-- Control de volumen ambiente -->
+        <div class="vol-control" id="vol-control" role="group" aria-label="Control de volumen">
+          <button class="btn-icon vol-control__step" id="vol-down" aria-label="Bajar volumen" title="Bajar volumen">
+            <i class="fa-solid fa-minus"></i>
+          </button>
+          <div class="vol-control__track" title="Volumen">
+            <div class="vol-control__fill" id="vol-fill" style="width:68%"></div>
+            <input type="range" class="vol-control__range" id="vol-range"
+                   min="0" max="100" value="68" aria-label="Volumen ambiente" />
+          </div>
+          <button class="btn-icon vol-control__step" id="vol-up" aria-label="Subir volumen" title="Subir volumen">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+
+        <button class="btn-icon" id="sound-toggle" aria-label="Activar sonido de naturaleza" title="Sonido de naturaleza · clic para activar">
           <i class="fa-solid fa-volume-xmark" id="sound-icon"></i>
         </button>
         <button class="hamburger" id="hamburger" aria-label="Abrir menú" aria-expanded="false">
@@ -70,7 +89,7 @@
 
       <!-- Cabecera del panel -->
       <div class="mobile-menu__head">
-        <img src="assets/images/logo-pal.png" alt="" class="mobile-menu__head-logo" />
+        <img src="assets/images/logo-pal.png" alt="" class="mobile-menu__head-logo js-logo" />
         <span class="mobile-menu__head-title">Palcloud · Raven</span>
       </div>
 
@@ -163,7 +182,7 @@
 
         <div class="hero__right reveal-right">
           <div class="hero__logo-wrap">
-            <img src="assets/images/logo-pal.png" alt="Logo" class="hero__logo" />
+            <img src="assets/images/logo-pal.png" alt="Logo" class="hero__logo js-logo" />
             <div class="hero__logo-ring" aria-hidden="true"></div>
           </div>
           <div class="hero__stats">
@@ -225,11 +244,11 @@
           <div class="about__img-col reveal-right">
             <div class="about__portrait">
               <div class="about__portrait-frame">
-                <img src="assets/images/avatar.jpg" alt="Palcloud Raven" loading="lazy"
+                <img src="assets/images/foto.png" alt="Palcloud Raven — Paloma" loading="lazy"
                      onerror="this.parentElement.classList.add('about__portrait-frame--empty')" />
               </div>
               <div class="about__portrait-deco" aria-hidden="true">
-                <img src="assets/images/logo-pal.png" alt="" class="about__portrait-logo"/>
+                <img src="assets/images/logo-pal.png" alt="" class="about__portrait-logo js-logo"/>
               </div>
               <blockquote class="about__quote">"El detalle es lo que distingue lo bueno de lo extraordinario."</blockquote>
             </div>
@@ -433,6 +452,20 @@
             <div class="gh-chart-wrap"><canvas id="chart-stats" aria-label="Stats"></canvas></div>
           </div>
         </div>
+
+        <!-- Repos reales de GitHub -->
+        <div class="gh-repos reveal-up" id="gh-repos-grid">
+          <!-- Rellenado dinámicamente por github-charts.js -->
+          <div class="gh-repos__loading">
+            <i class="fa-brands fa-github"></i>
+            <span>Cargando repositorios…</span>
+          </div>
+        </div>
+        <div class="gh-repos__cta reveal-up">
+          <a href="https://github.com/Pal-cloud" target="_blank" rel="noopener" class="btn btn--ghost">
+            Ver todos los repos en GitHub <i class="fa-brands fa-github"></i>
+          </a>
+        </div>
       </div>
     </section>
 
@@ -449,7 +482,7 @@
           <div class="contact__info reveal-left">
             <a href="mailto:hola@palcloudraven.dev" class="contact-item"><span class="contact-item__icon"><i class="fa-solid fa-envelope"></i></span><span class="contact-item__label">Email</span><span class="contact-item__val">hola@palcloudraven.dev</span></a>
             <a href="https://linkedin.com" target="_blank" rel="noopener" class="contact-item"><span class="contact-item__icon"><i class="fa-brands fa-linkedin-in"></i></span><span class="contact-item__label">LinkedIn</span><span class="contact-item__val">/in/palcloudraven</span></a>
-            <a href="https://github.com" target="_blank" rel="noopener" class="contact-item"><span class="contact-item__icon"><i class="fa-brands fa-github"></i></span><span class="contact-item__label">GitHub</span><span class="contact-item__val">@palcloudraven</span></a>
+            <a href="https://github.com/Pal-cloud" target="_blank" rel="noopener" class="contact-item"><span class="contact-item__icon"><i class="fa-brands fa-github"></i></span><span class="contact-item__label">GitHub</span><span class="contact-item__val">@Pal-cloud</span></a>
             <a href="https://twitter.com" target="_blank" rel="noopener" class="contact-item"><span class="contact-item__icon"><i class="fa-brands fa-x-twitter"></i></span><span class="contact-item__label">X / Twitter</span><span class="contact-item__val">@palcloudraven</span></a>
             <div class="availability reveal-up"><span class="dot dot--green"></span>Disponible para nuevos proyectos</div>
           </div>
@@ -470,7 +503,7 @@
   <footer class="footer">
     <div class="container">
       <div class="footer__inner">
-        <img src="assets/images/logo-pal.png" alt="Palcloud Raven" class="footer__logo" />
+        <img src="assets/images/logo-pal.png" alt="Palcloud Raven" class="footer__logo js-logo" />
         <nav class="footer__nav" aria-label="Footer nav">
           <a href="#about">Manifiesto</a>
           <a href="#skills">Oficio</a>
@@ -478,7 +511,7 @@
           <a href="#contact">Contacto</a>
         </nav>
         <div class="footer__social">
-          <a href="https://github.com"   target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+          <a href="https://github.com/Pal-cloud" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
           <a href="https://linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
           <a href="https://twitter.com"  target="_blank" rel="noopener" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
           <a href="mailto:hola@palcloudraven.dev" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>

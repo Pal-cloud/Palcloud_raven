@@ -1,9 +1,196 @@
 /**
- * sound.js — Amanecer forestal · Canto de pájaros sintético
- * Técnica: síntesis FM para gorjeos, trinos y silbidos
- *          + ambiente de bosque (ruido filtrado) + reverb natural
+ * sound.js — Bosque al atardecer / Oleaje suave
+ * Expone window.PalAmbient para control externo de volumen
  */
 'use strict';
+
+(function initSound() {
+  const btn  = document.getElementById('sound-toggle');
+  const icon = document.getElementById('sound-icon');
+  if (!btn) return;
+
+  let ctx       = null;
+  let master    = null;
+  let isPlaying = false;
+  let stopFns   = [];
+  let _vol      = 0.68;   // volumen actual (0–1)
+
+  function build() {
+    ctx    = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain();
+    master.gain.setValueAtTime(0, ctx.currentTime);
+    master.connect(ctx.destination);
+
+    const rev = makeReverb(ctx, 5, 2.0);
+    const dry = ctx.createGain(); dry.gain.value = 0.55; dry.connect(master);
+    const wet = ctx.createGain(); wet.gain.value = 0.45;
+    rev.connect(wet); wet.connect(master);
+
+    stopFns = [
+      buildWind(dry, wet),
+      buildOcean(dry, wet),
+      buildCrickets(wet),
+    ];
+  }
+
+  function buildWind(dry, wet) {
+    const buf = makeNoiseBuf(ctx, 6);
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+
+    const bp1 = ctx.createBiquadFilter();
+    bp1.type = 'bandpass'; bp1.frequency.value = 700; bp1.Q.value = 1.2;
+    const bp2 = ctx.createBiquadFilter();
+    bp2.type = 'bandpass'; bp2.frequency.value = 1800; bp2.Q.value = 0.7;
+
+    const lfo = ctx.createOscillator();
+    lfo.type = 'sine'; lfo.frequency.value = 0.04;
+    const lfoG = ctx.createGain(); lfoG.gain.value = 0.022;
+    lfo.connect(lfoG);
+
+    const vol = ctx.createGain(); vol.gain.value = 0.18;
+    lfoG.connect(vol.gain);
+
+    const buf2 = makeNoiseBuf(ctx, 4);
+    const src2 = ctx.createBufferSource();
+    src2.buffer = buf2; src2.loop = true;
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass'; hp.frequency.value = 2800;
+    const vol2 = ctx.createGain(); vol2.gain.value = 0.06;
+
+    src.connect(bp1); bp1.connect(bp2); bp2.connect(vol);
+    vol.connect(dry); vol.connect(wet);
+    src2.connect(hp); hp.connect(vol2); vol2.connect(wet);
+    src.start(); src2.start(); lfo.start();
+    return () => { try { src.stop(); src2.stop(); lfo.stop(); } catch(_){} };
+  }
+
+  function buildOcean(dry, wet) {
+    const buf = makeNoiseBuf(ctx, 8);
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 500;
+
+    const lfo = ctx.createOscillator();
+    lfo.type = 'sine'; lfo.frequency.value = 0.13;
+    const lfoG = ctx.createGain(); lfoG.gain.value = 0.11;
+    lfo.connect(lfoG);
+    const vol = ctx.createGain(); vol.gain.value = 0.13;
+    lfoG.connect(vol.gain);
+
+    const buf2 = makeNoiseBuf(ctx, 5);
+    const src2 = ctx.createBufferSource();
+    src2.buffer = buf2; src2.loop = true;
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'bandpass'; hp.frequency.value = 3200; hp.Q.value = 0.5;
+    const lfo2 = ctx.createOscillator();
+    lfo2.type = 'sine'; lfo2.frequency.value = 0.13;
+    const lfoG2 = ctx.createGain(); lfoG2.gain.value = 0.03;
+    lfo2.connect(lfoG2);
+    const vol2 = ctx.createGain(); vol2.gain.value = 0.04;
+    lfoG2.connect(vol2.gain);
+
+    src.connect(lp); lp.connect(vol); vol.connect(dry); vol.connect(wet);
+    src2.connect(hp); hp.connect(vol2); vol2.connect(wet);
+    src.start(); src2.start(); lfo.start(); lfo2.start();
+    return () => { try { src.stop(); src2.stop(); lfo.stop(); lfo2.stop(); } catch(_){} };
+  }
+
+  function buildCrickets(wet) {
+    let timer = null;
+    function chirp() {
+      if (!isPlaying || !ctx) return;
+      const now = ctx.currentTime;
+      const f   = 3800 + Math.random() * 600;
+      for (let i = 0; i < 3; i++) {
+        const o = ctx.createOscillator();
+        o.type = 'sine'; o.frequency.value = f;
+        const env = ctx.createGain();
+        env.gain.setValueAtTime(0.0001, now + i * 0.04);
+        env.gain.linearRampToValueAtTime(0.028, now + i * 0.04 + 0.01);
+        env.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.04 + 0.06);
+        o.connect(env); env.connect(wet);
+        o.start(now + i * 0.04); o.stop(now + i * 0.04 + 0.08);
+      }
+      timer = setTimeout(chirp, 900 + Math.random() * 2800);
+    }
+    chirp();
+    return () => { clearTimeout(timer); timer = null; };
+  }
+
+  function makeReverb(ctx, secs, decay) {
+    const conv = ctx.createConvolver();
+    const len  = ctx.sampleRate * secs;
+    const ir   = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) {
+      const ch = ir.getChannelData(c);
+      for (let i = 0; i < len; i++)
+        ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+    }
+    conv.buffer = ir; return conv;
+  }
+
+  function makeNoiseBuf(ctx, secs) {
+    const len = ctx.sampleRate * secs;
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const ch  = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+    return buf;
+  }
+
+  function fadeIn() {
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+    master.gain.linearRampToValueAtTime(_vol, ctx.currentTime + 3.5);
+  }
+
+  function fadeOut() {
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+    master.gain.linearRampToValueAtTime(0, ctx.currentTime + 2.5);
+    setTimeout(() => {
+      stopFns.forEach(f => f()); stopFns = [];
+      if (ctx) { ctx.close(); ctx = null; master = null; }
+    }, 3000);
+  }
+
+  // ── Toggle ────────────────────────────────────
+  btn.addEventListener('click', async () => {
+    if (!isPlaying) {
+      if (!ctx) build();
+      if (ctx.state === 'suspended') await ctx.resume();
+      fadeIn();
+      isPlaying = true;
+      icon.className = 'fa-solid fa-tree';
+      btn.title = 'Silenciar naturaleza';
+      btn.setAttribute('aria-label', 'Silenciar');
+    } else {
+      isPlaying = false;
+      icon.className = 'fa-solid fa-volume-xmark';
+      btn.title = 'Activar sonido de naturaleza';
+      btn.setAttribute('aria-label', 'Activar sonido');
+      fadeOut();
+    }
+  });
+
+  // ── API pública para control de volumen ───────
+  window.PalAmbient = {
+    setVolume(v) {
+      _vol = Math.max(0, Math.min(1, v));
+      if (master && isPlaying) {
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+        master.gain.linearRampToValueAtTime(_vol, ctx.currentTime + 0.3);
+      }
+    },
+    getVolume() { return _vol; },
+    isPlaying()  { return isPlaying; },
+  };
+
+})();
+
 
 (function initSound() {
   const btn  = document.getElementById('sound-toggle');
@@ -21,155 +208,121 @@
     master.gain.setValueAtTime(0, ctx.currentTime);
     master.connect(ctx.destination);
 
-    const reverb = makeReverb(ctx, 3.5, 2.2);
+    const rev = makeReverb(ctx, 5, 2.0);
+    const dry = ctx.createGain(); dry.gain.value = 0.55; dry.connect(master);
+    const wet = ctx.createGain(); wet.gain.value = 0.45;
+    rev.connect(wet); wet.connect(master);
 
-    const dryBus = ctx.createGain();
-    dryBus.gain.value = 0.50;
-    dryBus.connect(master);
-
-    const wetBus = ctx.createGain();
-    wetBus.gain.value = 0.50;
-    reverb.connect(wetBus);
-    wetBus.connect(master);
-
-    // 1 · Ambiente forestal suave (viento entre hojas)
-    const forestStop = buildForest(dryBus);
-
-    // 2 · Cuatro "pájaros" distintos a intervalos aleatorios
-    const stops = [
-      buildBirdScheduler(dryBus, wetBus, 2500,  7000, 'chirp'),
-      buildBirdScheduler(dryBus, wetBus, 3500, 10000, 'warble'),
-      buildBirdScheduler(dryBus, wetBus, 1800,  6500, 'call'),
-      buildBirdScheduler(dryBus, wetBus, 4000, 12000, 'whistle'),
+    stopFns = [
+      buildWind(dry, wet),       // viento suave entre hojas
+      buildOcean(dry, wet),      // oleaje rítmico
+      buildCrickets(wet),        // grillos nocturnos suaves
     ];
-
-    stopFns = [forestStop, ...stops];
   }
 
-  // ─── Ambiente: viento entre hojas ──────────
-  function buildForest(out) {
-    const buf = makeNoiseBuf(ctx, 5);
+  // ─── VIENTO: ruido filtrado con LFO de ráfagas ───
+  function buildWind(dry, wet) {
+    const buf = makeNoiseBuf(ctx, 6);
     const src = ctx.createBufferSource();
-    src.buffer = buf;
-    src.loop   = true;
+    src.buffer = buf; src.loop = true;
 
+    // Dos filtros en cascada → textura de hojas
+    const bp1 = ctx.createBiquadFilter();
+    bp1.type = 'bandpass'; bp1.frequency.value = 700; bp1.Q.value = 1.2;
+
+    const bp2 = ctx.createBiquadFilter();
+    bp2.type = 'bandpass'; bp2.frequency.value = 1800; bp2.Q.value = 0.7;
+
+    // LFO lento de ráfaga
+    const lfo = ctx.createOscillator();
+    lfo.type = 'sine'; lfo.frequency.value = 0.04;
+    const lfoG = ctx.createGain(); lfoG.gain.value = 0.022;
+    lfo.connect(lfoG);
+
+    const vol = ctx.createGain(); vol.gain.value = 0.18;
+    lfoG.connect(vol.gain);
+
+    // Segunda capa muy suave de hojas
+    const buf2 = makeNoiseBuf(ctx, 4);
+    const src2 = ctx.createBufferSource();
+    src2.buffer = buf2; src2.loop = true;
     const hp = ctx.createBiquadFilter();
-    hp.type = 'highpass';
-    hp.frequency.value = 1600;
+    hp.type = 'highpass'; hp.frequency.value = 2800;
+    const vol2 = ctx.createGain(); vol2.gain.value = 0.06;
+
+    src.connect(bp1); bp1.connect(bp2); bp2.connect(vol);
+    vol.connect(dry); vol.connect(wet);
+    src2.connect(hp); hp.connect(vol2); vol2.connect(wet);
+
+    src.start(); src2.start(); lfo.start();
+    return () => { try { src.stop(); src2.stop(); lfo.stop(); } catch(_){} };
+  }
+
+  // ─── OCÉANO: oleaje rítmico suave ────────────
+  function buildOcean(dry, wet) {
+    // Ruido filtrado + LFO lento sinusoidal que simula la ola
+    const buf = makeNoiseBuf(ctx, 8);
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.loop = true;
 
     const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 5500;
+    lp.type = 'lowpass'; lp.frequency.value = 500;
 
-    // LFO muy lento → ráfaga de viento
+    // LFO de ola — sube y baja cada ~7s
     const lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.035;
-    const lfoG = ctx.createGain();
-    lfoG.gain.value = 900;
+    lfo.type = 'sine'; lfo.frequency.value = 0.13;
+    const lfoG = ctx.createGain(); lfoG.gain.value = 0.11;
     lfo.connect(lfoG);
-    lfoG.connect(lp.frequency);
-    lfo.start();
 
-    const vol = ctx.createGain();
-    vol.gain.value = 0.028;
+    const vol = ctx.createGain(); vol.gain.value = 0.13;
+    lfoG.connect(vol.gain);
 
-    src.connect(hp); hp.connect(lp); lp.connect(vol); vol.connect(out);
-    src.start();
+    // Espuma: capa de ruido de alta frecuencia muy suave
+    const buf2 = makeNoiseBuf(ctx, 5);
+    const src2 = ctx.createBufferSource();
+    src2.buffer = buf2; src2.loop = true;
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'bandpass'; hp.frequency.value = 3200; hp.Q.value = 0.5;
+    const lfo2 = ctx.createOscillator();
+    lfo2.type = 'sine'; lfo2.frequency.value = 0.13;
+    const lfoG2 = ctx.createGain(); lfoG2.gain.value = 0.03;
+    lfo2.connect(lfoG2);
+    const vol2 = ctx.createGain(); vol2.gain.value = 0.04;
+    lfoG2.connect(vol2.gain);
 
-    return () => { try { src.stop(); lfo.stop(); } catch(_){} };
+    src.connect(lp); lp.connect(vol); vol.connect(dry); vol.connect(wet);
+    src2.connect(hp); hp.connect(vol2); vol2.connect(wet);
+
+    src.start(); src2.start(); lfo.start(); lfo2.start();
+    return () => { try { src.stop(); src2.stop(); lfo.stop(); lfo2.stop(); } catch(_){} };
   }
 
-  // ─── Planificador de pájaros ────────────────
-  function buildBirdScheduler(dry, wet, minMs, maxMs, type) {
+  // ─── GRILLOS: chirp suave y periódico ────────
+  function buildCrickets(wet) {
     let timer = null;
-    function schedule() {
-      if (!isPlaying) return;
-      const delay = minMs + Math.random() * (maxMs - minMs);
-      timer = setTimeout(() => {
-        if (isPlaying && ctx) { playBird(dry, wet, type); schedule(); }
-      }, delay);
+    function chirp() {
+      if (!isPlaying || !ctx) return;
+      const now = ctx.currentTime;
+      const f   = 3800 + Math.random() * 600;
+      for (let i = 0; i < 3; i++) {
+        const o   = ctx.createOscillator();
+        o.type    = 'sine';
+        o.frequency.value = f;
+        const env = ctx.createGain();
+        env.gain.setValueAtTime(0.0001, now + i * 0.04);
+        env.gain.linearRampToValueAtTime(0.028, now + i * 0.04 + 0.01);
+        env.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.04 + 0.06);
+        o.connect(env); env.connect(wet);
+        o.start(now + i * 0.04);
+        o.stop(now + i * 0.04 + 0.08);
+      }
+      timer = setTimeout(chirp, 900 + Math.random() * 2800);
     }
-    schedule();
+    chirp();
     return () => { clearTimeout(timer); timer = null; };
   }
 
-  // ─── Cantos sintéticos ──────────────────────
-  function playBird(dry, wet, type) {
-    if (!ctx) return;
-    const now = ctx.currentTime;
-    switch (type) {
-      case 'chirp':   // gorjeo rápido doble
-        chirp(dry, wet, 2400, 3600, 0.09, now);
-        chirp(dry, wet, 2100, 3200, 0.07, now + 0.14);
-        break;
-      case 'warble':  // trino de canario — vibrato rápido
-        warble(dry, wet, 2900 + Math.random() * 400, 0.14, now);
-        break;
-      case 'call':    // llamada de dos notas descendente
-        chirp(dry, wet, 1700, 1200, 0.13, now, 0.22);
-        chirp(dry, wet, 1900, 1400, 0.09, now + 0.32, 0.18);
-        break;
-      case 'whistle': // silbido ascendente largo
-        chirp(dry, wet, 900, 1900, 0.11, now, 0.38);
-        break;
-    }
-  }
-
-  // Barrido de frecuencia (chirp individual)
-  function chirp(dry, wet, fStart, fEnd, vol, when, dur = 0.13) {
-    const osc  = ctx.createOscillator();
-    const osc2 = ctx.createOscillator(); // armónico suave
-
-    osc.type  = 'sine';
-    osc2.type = 'sine';
-    osc.frequency.setValueAtTime(fStart, when);
-    osc.frequency.exponentialRampToValueAtTime(fEnd, when + dur);
-    osc2.frequency.setValueAtTime(fStart * 2.01, when);
-    osc2.frequency.exponentialRampToValueAtTime(fEnd * 2.01, when + dur);
-
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0.0001, when);
-    env.gain.linearRampToValueAtTime(vol,    when + 0.012);
-    env.gain.setValueAtTime(vol,             when + dur * 0.65);
-    env.gain.exponentialRampToValueAtTime(0.0001, when + dur + 0.025);
-
-    const hGain = ctx.createGain();
-    hGain.gain.value = 0.18;
-
-    osc.connect(env);
-    osc2.connect(hGain); hGain.connect(env);
-    env.connect(dry); env.connect(wet);
-
-    osc.start(when);  osc2.start(when);
-    osc.stop(when + dur + 0.05); osc2.stop(when + dur + 0.05);
-  }
-
-  // Vibrato rápido tipo canario
-  function warble(dry, wet, centerFreq, vol, when) {
-    const dur = 0.22 + Math.random() * 0.18;
-    const osc = ctx.createOscillator();
-    osc.type  = 'sine';
-    osc.frequency.value = centerFreq;
-
-    const lfo  = ctx.createOscillator();
-    lfo.type   = 'sine';
-    lfo.frequency.value = 13 + Math.random() * 9;
-    const lfoG = ctx.createGain();
-    lfoG.gain.value = centerFreq * 0.07;
-    lfo.connect(lfoG); lfoG.connect(osc.frequency);
-
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0.0001, when);
-    env.gain.linearRampToValueAtTime(vol,    when + 0.025);
-    env.gain.setValueAtTime(vol,             when + dur - 0.04);
-    env.gain.exponentialRampToValueAtTime(0.0001, when + dur + 0.03);
-
-    osc.connect(env); env.connect(dry); env.connect(wet);
-    osc.start(when); lfo.start(when);
-    osc.stop(when + dur + 0.05); lfo.stop(when + dur + 0.05);
-  }
-
-  // ─── Utilidades ─────────────────────────────
+  // ─── Utilidades ──────────────────────────────
   function makeReverb(ctx, secs, decay) {
     const conv = ctx.createConvolver();
     const len  = ctx.sampleRate * secs;
@@ -194,260 +347,33 @@
   function fadeIn() {
     master.gain.cancelScheduledValues(ctx.currentTime);
     master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
-    master.gain.linearRampToValueAtTime(0.60, ctx.currentTime + 3.5);
+    master.gain.linearRampToValueAtTime(0.68, ctx.currentTime + 3.5);
   }
 
   function fadeOut() {
     master.gain.cancelScheduledValues(ctx.currentTime);
     master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
-    master.gain.linearRampToValueAtTime(0, ctx.currentTime + 2.2);
+    master.gain.linearRampToValueAtTime(0, ctx.currentTime + 2.5);
     setTimeout(() => {
       stopFns.forEach(f => f()); stopFns = [];
       if (ctx) { ctx.close(); ctx = null; master = null; }
-    }, 2500);
+    }, 3000);
   }
 
-  // ─── Toggle ─────────────────────────────────
+  // ─── Toggle ──────────────────────────────────
   btn.addEventListener('click', async () => {
     if (!isPlaying) {
       if (!ctx) build();
       if (ctx.state === 'suspended') await ctx.resume();
       fadeIn();
       isPlaying = true;
-      icon.className = 'fa-solid fa-dove';
-      btn.title = 'Silenciar canto';
+      icon.className = 'fa-solid fa-tree';
+      btn.title = 'Silenciar naturaleza';
       btn.setAttribute('aria-label', 'Silenciar');
     } else {
       isPlaying = false;
       icon.className = 'fa-solid fa-volume-xmark';
-      btn.title = 'Activar canto de pájaros';
-      btn.setAttribute('aria-label', 'Activar sonido');
-      fadeOut();
-    }
-  });
-
-})();
-
-
-(function initSound() {
-  const btn  = document.getElementById('sound-toggle');
-  const icon = document.getElementById('sound-icon');
-  if (!btn) return;
-
-  let ctx       = null;
-  let master    = null;
-  let isPlaying = false;
-  let stopFns   = [];
-
-  // ─── Construir el grafo de audio ───────────
-  function build() {
-    ctx    = new (window.AudioContext || window.webkitAudioContext)();
-    master = ctx.createGain();
-    master.gain.setValueAtTime(0, ctx.currentTime);
-    master.connect(ctx.destination);
-
-    const reverb = makeReverb(ctx, 4, 2.8, 0.3);
-
-    // Bus seco y húmedo compartidos
-    const dryBus = ctx.createGain();
-    dryBus.gain.value = 0.6;
-    dryBus.connect(master);
-
-    const wetBus = ctx.createGain();
-    wetBus.gain.value = 0.4;
-    reverb.connect(wetBus);
-    wetBus.connect(master);
-
-    // 1 · LLUVIA: ruido blanco filtrado en bandas
-    const rainStop = buildRain(dryBus, wetBus);
-
-    // 2 · GOTAS: pings aleatorios de resonancia
-    const dropStop = buildDrops(wetBus);
-
-    // 3 · DRONE: pad de fondo muy suave (La menor, p=0.02)
-    const droneStop = buildDrone(wetBus);
-
-    stopFns = [rainStop, dropStop, droneStop];
-  }
-
-  // ─── LLUVIA: varias capas de ruido filtrado ──
-  function buildRain(dry, wet) {
-    const buffers = [
-      { freq: 800,  q: 1.5,  gain: 0.18 },   // lluvia fina
-      { freq: 2200, q: 0.8,  gain: 0.10 },   // salpicaduras
-      { freq: 320,  q: 2.0,  gain: 0.08 },   // graves de fondo
-    ];
-
-    const nodes = buffers.map(({ freq, q, gain: g }) => {
-      const buf = makeNoiseBuffer(ctx, 4);    // 4s de ruido blanco
-      const src = ctx.createBufferSource();
-      src.buffer = buf;
-      src.loop = true;
-
-      const filt = ctx.createBiquadFilter();
-      filt.type = 'bandpass';
-      filt.frequency.value = freq;
-      filt.Q.value = q;
-
-      // LFO muy lento sobre el filtro → sensación de ráfaga
-      const lfo = ctx.createOscillator();
-      lfo.type = 'sine';
-      lfo.frequency.value = 0.08 + Math.random() * 0.06;
-      const lfoG = ctx.createGain();
-      lfoG.gain.value = freq * 0.15;
-      lfo.connect(lfoG);
-      lfoG.connect(filt.frequency);
-      lfo.start();
-
-      const vol = ctx.createGain();
-      vol.gain.value = g;
-
-      src.connect(filt);
-      filt.connect(vol);
-      vol.connect(dry);
-      vol.connect(wet);
-
-      src.start();
-
-      return () => { try { src.stop(); lfo.stop(); } catch(_){} };
-    });
-
-    return () => nodes.forEach(f => f());
-  }
-
-  // ─── GOTAS: impulsos resonantes aleatorios ──
-  function buildDrops(wet) {
-    let timer = null;
-
-    function scheduleNext() {
-      const delay = 80 + Math.random() * 600;  // entre 80ms y 680ms
-      timer = setTimeout(playDrop, delay);
-    }
-
-    function playDrop() {
-      if (!isPlaying) return;
-
-      // Frecuencia de la gota: alta, random
-      const freq = 900 + Math.random() * 1800;
-
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(freq * 0.4, ctx.currentTime + 0.25);
-
-      const env = ctx.createGain();
-      env.gain.setValueAtTime(0.0001, ctx.currentTime);
-      env.gain.linearRampToValueAtTime(0.045, ctx.currentTime + 0.005);
-      env.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3);
-
-      osc.connect(env);
-      env.connect(wet);
-
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.35);
-
-      scheduleNext();
-    }
-
-    scheduleNext();
-    return () => { clearTimeout(timer); timer = null; };
-  }
-
-  // ─── DRONE: pad sine muy suave de fondo ─────
-  function buildDrone(wet) {
-    const CHORD = [110, 130.8, 164.8, 220];  // La menor, muy bajo
-    const oscs = CHORD.map((freq, i) => {
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-
-      const ampLFO = ctx.createOscillator();
-      ampLFO.type = 'sine';
-      ampLFO.frequency.value = 0.03 + i * 0.005;
-      const lfoG = ctx.createGain();
-      lfoG.gain.value = 0.008;
-      ampLFO.connect(lfoG);
-
-      const vol = ctx.createGain();
-      vol.gain.value = 0.015 - i * 0.002;
-      lfoG.connect(vol.gain);
-
-      osc.connect(vol);
-      vol.connect(wet);
-
-      osc.start();
-      ampLFO.start();
-
-      return () => { try { osc.stop(); ampLFO.stop(); } catch(_){} };
-    });
-
-    return () => oscs.forEach(f => f());
-  }
-
-  // ─── Reverb de placa ────────────────────────
-  function makeReverb(ctx, seconds, decay, wet) {
-    const conv = ctx.createConvolver();
-    const len  = ctx.sampleRate * seconds;
-    const ir   = ctx.createBuffer(2, len, ctx.sampleRate);
-
-    for (let c = 0; c < 2; c++) {
-      const chan = ir.getChannelData(c);
-      for (let i = 0; i < len; i++) {
-        chan[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
-      }
-    }
-    conv.buffer = ir;
-    return conv;
-  }
-
-  // ─── Buffer de ruido blanco ─────────────────
-  function makeNoiseBuffer(ctx, seconds) {
-    const len = ctx.sampleRate * seconds;
-    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
-    const ch  = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
-    return buf;
-  }
-
-  // ─── Fade in / out ──────────────────────────
-  function fadeIn() {
-    master.gain.cancelScheduledValues(ctx.currentTime);
-    master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
-    master.gain.linearRampToValueAtTime(0.72, ctx.currentTime + 2.5);
-  }
-
-  function fadeOut(cb) {
-    master.gain.cancelScheduledValues(ctx.currentTime);
-    master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
-    master.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.8);
-    setTimeout(() => {
-      stopFns.forEach(f => f());
-      stopFns = [];
-      ctx.close();
-      ctx = null;
-      master = null;
-      cb?.();
-    }, 2000);
-  }
-
-  // ─── Toggle ─────────────────────────────────
-  btn.addEventListener('click', async () => {
-    if (!isPlaying) {
-      // Primer click: construir y arrancar
-      if (!ctx) build();
-
-      // Reanudar si el contexto está suspendido (autoplay policy)
-      if (ctx.state === 'suspended') await ctx.resume();
-
-      fadeIn();
-      isPlaying = true;
-      icon.className = 'fa-solid fa-volume-high';
-      btn.title = 'Silenciar sonido';
-      btn.setAttribute('aria-label', 'Silenciar sonido');
-    } else {
-      isPlaying = false;
-      icon.className = 'fa-solid fa-volume-xmark';
-      btn.title = 'Activar sonido';
+      btn.title = 'Activar sonido de naturaleza';
       btn.setAttribute('aria-label', 'Activar sonido');
       fadeOut();
     }

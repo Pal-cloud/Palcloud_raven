@@ -1,138 +1,153 @@
-# 🪶 Palcloud Raven — Portfolio Personal
+# 🪶 Palcloud Raven — Portfolio
 
-> Portfolio personal diseñado y construido con HTML5, CSS3 vanilla y JavaScript ES6+ puro.  
-> Sin frameworks. Sin dependencias. Solo código limpio y rápido.
+> *Donde el código se convierte en arte.*
+
+Portfolio personal de **Paloma (Pal-cloud)** — desarrolladora y diseñadora digital.  
+Diseño editorial bohemio, oscuro y cálido, construido íntegramente con HTML, CSS y JavaScript vanilla.
+
+🌐 **Demo:** [palcloudraven.dev](https://palcloudraven.dev) *(próximamente)*  
+👤 **GitHub:** [github.com/Pal-cloud](https://github.com/Pal-cloud)
 
 ---
 
 ## ✨ Características
 
-- **Diseño Mobile-First** — responsivo en todos los dispositivos
-- **Tema oscuro/claro** — persiste la preferencia del usuario
-- **Cursor personalizado** — animado con lerp suavizado
-- **Canvas de partículas** — red neuronal interactiva en el hero
-- **Typewriter effect** — palabras rotativas con velocidad natural
-- **Intersection Observer** — reveals animados al hacer scroll
-- **Tabs de skills** — con animación de barras de progreso
-- **Filtrado de proyectos** — con transiciones fluidas
-- **Contadores animados** — estadísticas con easing
-- **Formulario validado** — con feedback en tiempo real
-- **Accesibilidad** — ARIA, focus visible, reduced motion
-- **Performance** — lazy loading, zero blocking scripts
+### Diseño
+- Estética **editorial bohemia** — tipografía Cormorant Garamond + Space Mono
+- Paleta oscuro-cálida: negros cálidos, oro antiguo y crema
+- Layout tipo revista con grid asimétrico
+- Grano de película SVG y efectos de profundidad
+- Cursor personalizado animado
+- Totalmente **responsive** — mobile first
+
+### Experiencia de usuario
+- **Menú hamburguesa** siempre visible con panel lateral overlay fullscreen
+  - Links con numeración, descripción y barra animada
+  - Overlay con blur de fondo
+  - Indicador de sección activa sincronizado con el scroll
+- **Loader** animado con barra de progreso
+- **Reveals** de scroll con animaciones staggered
+- **Cursor personalizado** con efecto magnético
+
+### Audio
+- 🌿 **Sonido ambiente** generativo — bosque + oleaje + grillos (Web Audio API pura)
+- 🔊 **Control de volumen** con slider y botones `−` / `+` en la navbar
+- 🎵 **Micro-sonidos de UI** en todos los elementos interactivos:
+  - Hover: tick agudo suave
+  - Click: tap percusivo orgánico
+  - Abrir/cerrar menú: acorde ascendente/descendente
+  - Éxito, error y notificación con timbres distintos
+- Todo activado **solo tras gesto del usuario** (cumple política de autoplay)
+
+### GitHub en tiempo real
+- Datos cargados desde la **API pública de GitHub** (`api.github.com/users/Pal-cloud`)
+- Gráfico de **actividad mensual** (área)
+- Gráfico de **lenguajes** por bytes (donut con leyenda)
+- Gráfico de **stats** (barras horizontales)
+- **Cuadrícula de repos** reales — ordenados por estrellas y actividad reciente
+- Badge 🟢 *en vivo* cuando la API responde correctamente
+- Fallback a datos estáticos si hay error de red o rate-limit
+
+### Toasts informativos
+- Sistema de notificaciones emergentes propio (sin dependencias)
+- Tipos: `info`, `success`, `warning`, `error`
+- Auto-dismiss, botón de cierre, sonido asociado a cada tipo
+- Toasts contextuales: bienvenida, GitHub cargado, formulario enviado
 
 ---
 
-## 📁 Estructura del proyecto
+## 🗂 Estructura del proyecto
 
 ```
 Palcloud_raven/
-├── index.html                  # Estructura semántica HTML5
+├── index.html
 ├── css/
-│   ├── reset.css               # Normalización cross-browser
-│   ├── variables.css           # Design tokens (colores, fuentes, spacing)
-│   ├── main.css                # Estilos globales y secciones
-│   ├── components.css          # Botones, formulario, cursor
-│   ├── animations.css          # Keyframes y clases reveal
-│   └── responsive.css          # Breakpoints mobile-first
+│   ├── reset.css
+│   ├── variables.css      ← tokens de diseño
+│   ├── main.css           ← layout, navbar, menú, repos, volumen…
+│   ├── components.css     ← botones, forms, cursor
+│   ├── animations.css     ← keyframes y reveals
+│   └── responsive.css     ← breakpoints
 ├── js/
-│   ├── utils.js                # Helpers reutilizables ($, debounce, lerp...)
-│   ├── loader.js               # Pantalla de carga
-│   ├── navbar.js               # Navegación + menú móvil
-│   ├── cursor.js               # Cursor custom animado
-│   ├── canvas.js               # Partículas hero (Canvas API)
-│   ├── typewriter.js           # Efecto de escritura
-│   ├── animations.js           # Intersection Observer reveals
-│   ├── skills.js               # Tabs + barras de progreso
-│   ├── projects.js             # Filtrado de proyectos
-│   ├── counter.js              # Contadores animados
-│   ├── form.js                 # Validación + envío formulario
-│   ├── theme.js                # Toggle claro/oscuro
-│   └── main.js                 # Init global
+│   ├── utils.js           ← helpers ($, $$, throttle…)
+│   ├── loader.js          ← pantalla de carga
+│   ├── navbar.js          ← hamburger overlay
+│   ├── cursor.js          ← cursor personalizado
+│   ├── canvas.js          ← partículas hero
+│   ├── animations.js      ← IntersectionObserver reveals
+│   ├── skills.js          ← tabs de habilidades + barras
+│   ├── projects.js        ← filtro de proyectos
+│   ├── counter.js         ← contadores animados
+│   ├── form.js            ← validación y envío
+│   ├── sound.js           ← ambiente forestal (Web Audio)
+│   ├── ui-sounds.js       ← micro-sonidos + toasts + vol control
+│   ├── github-charts.js   ← API GitHub + Chart.js + repos
+│   └── main.js            ← inicialización global
 └── assets/
     └── images/
-        ├── raven-logo.svg      # ← COLOCA TU LOGO AQUÍ
-        ├── avatar.jpg          # ← COLOCA TU FOTO AQUÍ
-        └── project-*.jpg      # ← CAPTURAS DE TUS PROYECTOS
+        └── logo-pal.png   ← logo y favicon
 ```
 
 ---
 
-## 🖼️ Cómo añadir tu logo (el cuervo)
+## 🛠 Tecnologías
 
-1. Guarda tu logo en `assets/images/raven-logo.svg`
-2. El logo aparece automáticamente en:
-   - Pantalla de carga (loader)
-   - Navbar
-   - Badge de la foto (about)
-   - Footer
-3. Formatos aceptados: `.svg` (recomendado), `.png`, `.webp`
-4. Si el archivo no existe, se muestra un fallback elegante
+| Área | Tecnología |
+|---|---|
+| Estructura | HTML5 semántico |
+| Estilos | CSS3 puro — custom properties, grid, clamp |
+| Scripts | JavaScript ES2022 vanilla — sin frameworks |
+| Gráficas | [Chart.js 4](https://www.chartjs.org/) vía CDN |
+| Iconos | [Font Awesome 6](https://fontawesome.com/) vía CDN |
+| Fuentes | Google Fonts — Cormorant Garamond + Space Mono |
+| Audio | Web Audio API nativa |
+| Datos | GitHub REST API pública |
 
 ---
 
-## 🎨 Personalización
+## 🚀 Desarrollo local
 
-### Colores
-Edita las variables en `css/variables.css`:
-```css
---accent:       #9b5de5;  /* Color principal (púrpura) */
---accent-light: #b87eff;  /* Variante clara */
---bg-primary:   #0a0a0f;  /* Fondo oscuro */
+```bash
+# Clonar el repo
+git clone https://github.com/Pal-cloud/Palcloud_raven.git
+cd Palcloud_raven
+
+# Cualquier servidor estático sirve — ejemplo con npx
+npx live-server --port=5501
 ```
 
-### Typewriter words
-En `js/typewriter.js`:
-```js
-const words = ['Apasionado.', 'Innovador.', 'Full Stack.', ...];
+No hay dependencias npm — todo funciona directamente en el navegador.
+
+---
+
+## 📊 GitHub Stats (datos reales)
+
+Los datos se cargan en tiempo real desde:
 ```
-
-### Skills y proyectos
-Edita directamente el HTML en `index.html` —  
-cada tarjeta está comentada y estructurada claramente.
-
----
-
-## 📧 Conectar el formulario de contacto
-
-En `js/form.js`, reemplaza `simulateSend()` con:
-
-**Formspree (gratis):**
-```js
-await fetch('https://formspree.io/f/TU_ID', {
-  method: 'POST',
-  body: data,
-  headers: { 'Accept': 'application/json' }
-});
+https://api.github.com/users/Pal-cloud
+https://api.github.com/users/Pal-cloud/repos
 ```
-
-**EmailJS:**
-```js
-await emailjs.sendForm('SERVICE_ID', 'TEMPLATE_ID', form);
-```
+La API pública permite 60 peticiones/hora sin autenticación.  
+Si se alcanza el límite, el portfolio muestra datos de respaldo sin interrupciones.
 
 ---
 
-## 🚀 Deploy
+## 🎨 Paleta de colores
 
-Este portfolio es HTML estático — funciona en cualquier hosting:
-
-- **GitHub Pages** — gratis, dominio `usuario.github.io`
-- **Netlify** — drag & drop de la carpeta, dominio personalizado
-- **Vercel** — similar a Netlify, excelente velocidad
-- **Servidor propio** — Apache/Nginx, copia la carpeta
-
----
-
-## 🛠️ Tecnologías demostradas
-
-| Área | Tecnologías |
-|------|-------------|
-| Markup | HTML5 semántico, ARIA, Open Graph |
-| Estilos | CSS Custom Properties, Grid, Flexbox, animations |
-| Scripts | JavaScript ES6+, Canvas API, Intersection Observer, ResizeObserver |
-| UX | Mobile-first, reduced-motion, lazy loading, focus management |
-| Patrones | IIFE, módulos, Observer Pattern, Event-driven architecture |
+| Token | Valor | Uso |
+|---|---|---|
+| `--bg-primary` | `#0d0b07` | Fondo principal |
+| `--accent` | `#c9a84c` | Oro antiguo — acento |
+| `--accent-light` | `#e8c96d` | Oro claro — hover |
+| `--text-primary` | `#e8d5b7` | Texto principal |
+| `--text-secondary` | `#8b7a65` | Texto secundario |
 
 ---
 
-*Construido con 🪶 y mucho café — Palcloud Raven 2026*
+## 📝 Licencia
+
+© 2026 Palcloud Raven — Todos los derechos reservados.
+
+---
+
+*Código que vuela · Diseño que perdura* 🪶

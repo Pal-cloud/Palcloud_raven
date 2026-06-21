@@ -1646,6 +1646,204 @@ body {
   50%       { box-shadow: 0 0 0 5px rgba(201,168,76,0.15); }
 }
 
+/* ─── CONTROL DE VOLUMEN ─────────────────── */
+.vol-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  opacity: 0;
+  pointer-events: none;
+  transform: scaleX(0.8);
+  transform-origin: right;
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  max-width: 0;
+  overflow: hidden;
+}
+
+/* Se muestra cuando el sonido está activo */
+.vol-control.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scaleX(1);
+  max-width: 160px;
+}
+
+.vol-control__step {
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 0.55rem !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-sm) !important;
+  flex-shrink: 0;
+  padding: 0 !important;
+}
+
+.vol-control__track {
+  position: relative;
+  width: 80px;
+  height: 3px;
+  background: var(--border-subtle);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.vol-control__fill {
+  position: absolute;
+  inset: 0;
+  right: auto;
+  background: var(--gradient-gold);
+  border-radius: var(--radius-full);
+  pointer-events: none;
+  transition: width 0.15s ease;
+}
+
+.vol-control__range {
+  position: absolute;
+  inset: -6px 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+}
+
+/* ─── REPOS GRID ─────────────────────────── */
+.gh-repos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-top: var(--space-10);
+}
+
+.gh-repos__loading {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  padding: var(--space-10);
+  letter-spacing: 0.15em;
+}
+
+.gh-repos__cta {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-8);
+}
+
+.gh-repo-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  text-decoration: none;
+  transition:
+    border-color var(--transition-base),
+    box-shadow   var(--transition-base),
+    transform    var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.gh-repo-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-card);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.gh-repo-card:hover {
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm), 0 0 0 1px rgba(201,168,76,0.08);
+  transform: translateY(-3px);
+}
+
+.gh-repo-card:hover::before { opacity: 1; }
+
+.gh-repo-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  position: relative;
+}
+
+.gh-repo-card__icon {
+  color: var(--accent);
+  font-size: var(--text-sm);
+  flex-shrink: 0;
+}
+
+.gh-repo-card__name {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gh-repo-card__desc {
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.55;
+  flex: 1;
+  position: relative;
+}
+
+.gh-repo-card__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-top: auto;
+  position: relative;
+}
+
+.gh-repo-card__lang,
+.gh-repo-card__star,
+.gh-repo-card__date {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  letter-spacing: 0.06em;
+}
+
+.gh-repo-card__dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.gh-repo-card__date { margin-left: auto; }
+
+@media (max-width: 1023px) {
+  .gh-repos { grid-template-columns: repeat(2, 1fr); }
+  .vol-control.visible { max-width: 130px; }
+  .vol-control__track  { width: 60px; }
+}
+
+@media (max-width: 767px) {
+  .gh-repos { grid-template-columns: 1fr; }
+  .vol-control { display: none; }
+}
+
 /* ─── TOASTS ─────────────────────────────── */
 .toast-container {
   position: fixed;

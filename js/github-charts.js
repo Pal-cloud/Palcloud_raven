@@ -364,25 +364,23 @@
 
     let activityData = FALLBACK.activity;
     let langsData    = FALLBACK.langPcts;
-    let statsData    = FALLBACK.stats;
+    let statsData    = { ...FALLBACK.stats };
     let isLive       = false;
+    let reposData    = [];
 
     try {
       const [userData, repos] = await Promise.all([fetchUserData(), fetchRepos()]);
       statsData.repos = userData.public_repos;
 
-      const langs      = await fetchLanguages(repos);
-      activityData     = buildActivityFromRepos(repos);
+      const langs  = await fetchLanguages(repos);
+      activityData = buildActivityFromRepos(repos);
 
       if (langs.length > 0) langsData = langs;
-
-      // Total de estrellas acumuladas
       statsData.stars = repos.reduce((acc, r) => acc + (r.stargazers_count || 0), 0);
 
-      // Actualizar métricas del DOM
       updateMetrics(userData, repos, statsData);
-
-      isLive = true;
+      reposData = repos;
+      isLive    = true;
     } catch (err) {
       console.warn('[PalCloud] GitHub API fallback →', err.message ?? err);
     }
@@ -390,8 +388,54 @@
     buildActivityChart(activityData);
     buildLangsChart(langsData);
     buildStatsChart(statsData);
+    buildReposGrid(reposData);
 
     if (isLive) markAsLive();
+  }
+
+  // ── Cuadrícula de repos reales ──────────────
+  function buildReposGrid(repos) {
+    const grid = document.getElementById('gh-repos-grid');
+    if (!grid) return;
+
+    // Ordenar: primero los más recientes con más estrellas
+    const sorted = [...repos]
+      .filter(r => !r.fork)
+      .sort((a, b) => {
+        const stars = (b.stargazers_count - a.stargazers_count);
+        if (stars !== 0) return stars;
+        return new Date(b.pushed_at) - new Date(a.pushed_at);
+      })
+      .slice(0, 6);
+
+    if (sorted.length === 0) {
+      grid.innerHTML = '<p style="color:var(--text-muted);font-family:var(--font-mono);font-size:var(--text-xs);text-align:center;padding:var(--space-8)">No se pudieron cargar los repositorios.</p>';
+      return;
+    }
+
+    grid.innerHTML = sorted.map(repo => {
+      const lang  = repo.language || 'Otros';
+      const color = LANG_COLORS[lang] || LANG_COLORS.Other || '#6b6a67';
+      const desc  = repo.description ? repo.description.slice(0, 90) + (repo.description.length > 90 ? '…' : '') : 'Sin descripción';
+      const date  = new Date(repo.pushed_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'short' });
+
+      return `
+        <a href="${repo.html_url}" target="_blank" rel="noopener" class="gh-repo-card" tabindex="0">
+          <div class="gh-repo-card__head">
+            <i class="fa-solid fa-code-branch gh-repo-card__icon"></i>
+            <span class="gh-repo-card__name">${repo.name}</span>
+          </div>
+          <p class="gh-repo-card__desc">${desc}</p>
+          <div class="gh-repo-card__foot">
+            <span class="gh-repo-card__lang">
+              <span class="gh-repo-card__dot" style="background:${color}"></span>${lang}
+            </span>
+            <span class="gh-repo-card__star"><i class="fa-regular fa-star"></i> ${repo.stargazers_count}</span>
+            <span class="gh-repo-card__date">${date}</span>
+          </div>
+        </a>
+      `;
+    }).join('');
   }
 
   // Observar cuando la sección entra en viewport (lazy render)
