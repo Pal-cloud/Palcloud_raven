@@ -1,54 +1,61 @@
 /**
- * theme.js — Toggle entre tema oscuro y claro
+ * theme.js — Toggle oscuro/claro con icono sincronizado
  */
 'use strict';
 
 (function initTheme() {
-  const STORAGE_KEY  = 'palcloud-theme';
-  const toggleBtn    = document.getElementById('theme-toggle');
-  const themeIcon    = document.getElementById('theme-icon');
-  const html         = document.documentElement;
+  const STORAGE_KEY = 'palcloud-theme';
+  const toggleBtn   = document.getElementById('theme-toggle');
+  const themeIcon   = document.getElementById('theme-icon');
+  const html        = document.documentElement;
 
   if (!toggleBtn) return;
 
-  // ── Obtener tema guardado o preferencia del sistema ──
-  function getPreferredTheme() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return saved;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-
-  // ── Aplicar tema ───────────────────────
+  // ── Aplica el tema y sincroniza el icono ──
   function applyTheme(theme) {
     html.dataset.theme = theme;
     localStorage.setItem(STORAGE_KEY, theme);
-
-    if (themeIcon) {
-      themeIcon.className = theme === 'dark'
-        ? 'fa-solid fa-moon'
-        : 'fa-solid fa-sun';
-    }
-
+    syncIcon(theme);
     toggleBtn.setAttribute('aria-label',
       theme === 'dark' ? 'Activar tema claro' : 'Activar tema oscuro'
     );
   }
 
-  // ── Toggle ─────────────────────────────
+  function syncIcon(theme) {
+    if (!themeIcon) return;
+    // Animación suave de cambio
+    themeIcon.style.transform = 'scale(0) rotate(180deg)';
+    themeIcon.style.transition = 'transform 0.2s ease';
+    setTimeout(() => {
+      themeIcon.className = theme === 'dark'
+        ? 'fa-solid fa-moon'
+        : 'fa-solid fa-sun';
+      themeIcon.style.transform = 'scale(1) rotate(0deg)';
+    }, 200);
+  }
+
+  // ── Toggle al hacer click ──
   toggleBtn.addEventListener('click', () => {
-    const current = html.dataset.theme || 'dark';
-    applyTheme(current === 'dark' ? 'light' : 'dark');
+    const current = html.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(current);
   });
 
-  // ── Escuchar cambios del sistema ───────
-  window.matchMedia('(prefers-color-scheme: dark)')
-    .addEventListener('change', (e) => {
-      // Solo actualizar si el usuario no tiene preferencia guardada
-      if (!localStorage.getItem(STORAGE_KEY)) {
-        applyTheme(e.matches ? 'dark' : 'light');
-      }
-    });
+  // ── Seguir cambios del sistema si no hay preferencia guardada ──
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    if (!localStorage.getItem(STORAGE_KEY)) {
+      applyTheme(e.matches ? 'dark' : 'light');
+    }
+  });
 
-  // ── Iniciar ────────────────────────────
-  applyTheme(getPreferredTheme());
+  // ── Sincronizar icono con el tema ya aplicado en el <head> ──
+  // (el inline script ya aplicó el data-theme correcto)
+  const currentTheme = html.dataset.theme || 'dark';
+  if (themeIcon) {
+    themeIcon.className = currentTheme === 'dark'
+      ? 'fa-solid fa-moon'
+      : 'fa-solid fa-sun';
+  }
+  toggleBtn.setAttribute('aria-label',
+    currentTheme === 'dark' ? 'Activar tema claro' : 'Activar tema oscuro'
+  );
 })();

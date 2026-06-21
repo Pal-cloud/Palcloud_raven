@@ -21,6 +21,16 @@
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/animations.css" />
   <link rel="stylesheet" href="css/responsive.css" />
+
+  <!-- Aplicar tema ANTES de renderizar para evitar flash -->
+  <script>
+    (function() {
+      var saved = localStorage.getItem('palcloud-theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
 </head>
 <body data-theme="dark">
 
@@ -53,6 +63,9 @@
         <li><a href="#contact"  class="navbar__link" data-section="contact">Contacto</a></li>
       </ul>
       <div class="navbar__actions">
+        <button class="btn-icon" id="sound-toggle" aria-label="Activar sonido" title="Sonido ambiente">
+          <i class="fa-solid fa-volume-xmark" id="sound-icon"></i>
+        </button>
         <button class="btn-icon" id="theme-toggle" aria-label="Cambiar tema">
           <i class="fa-solid fa-moon" id="theme-icon"></i>
         </button>
@@ -111,18 +124,18 @@
           </div>
           <div class="hero__stats">
             <div class="hero__stat">
-              <span class="hero__stat-n" data-target="3">0</span>
+              <span class="hero__stat-n" data-target="2">0</span>
               <span class="hero__stat-l">años</span>
             </div>
             <div class="hero__stat-sep" aria-hidden="true">/</div>
             <div class="hero__stat">
-              <span class="hero__stat-n" data-target="20">0</span>
+              <span class="hero__stat-n" data-target="36">0</span>
               <span class="hero__stat-l">proyectos</span>
             </div>
             <div class="hero__stat-sep" aria-hidden="true">/</div>
             <div class="hero__stat">
-              <span class="hero__stat-n" data-target="100">0</span>
-              <span class="hero__stat-l">% pasión</span>
+              <span class="hero__stat-n" data-target="209">0</span>
+              <span class="hero__stat-l">commits 2026</span>
             </div>
           </div>
         </div>
@@ -343,10 +356,46 @@
       </div>
     </section>
 
+    <!-- GITHUB STATS -->
+    <section class="github-stats section" id="github-stats">
+      <div class="container">
+        <span class="section__num" aria-hidden="true">06</span>
+        <div class="section-header reveal-up">
+          <p class="section-tag">GitHub · Pal-cloud (Paloma)</p>
+          <h2 class="section-title">Actividad en<br/><em>código abierto</em></h2>
+        </div>
+
+        <div class="gh-metrics reveal-up">
+          <div class="gh-metric"><span class="gh-metric__n" data-target="244">0</span><span class="gh-metric__l">Contribuciones 2026</span></div>
+          <div class="gh-metric"><span class="gh-metric__n" data-target="31">0</span><span class="gh-metric__l">Repos públicos</span></div>
+          <div class="gh-metric"><span class="gh-metric__n" data-target="209">0</span><span class="gh-metric__l">Commits 2026</span></div>
+          <div class="gh-metric"><span class="gh-metric__n" data-target="39">0</span><span class="gh-metric__l">Pull Requests</span></div>
+          <div class="gh-metric"><span class="gh-metric__n" data-target="51">0</span><span class="gh-metric__l">Repos contribuidos</span></div>
+          <div class="gh-metric"><span class="gh-metric__n" data-target="9">0</span><span class="gh-metric__l">Estrellas recibidas</span></div>
+        </div>
+
+        <div class="gh-charts reveal-up">
+          <div class="gh-chart-card gh-chart-card--wide">
+            <p class="gh-chart-card__title">Contribuciones en el último año</p>
+            <div class="gh-chart-wrap"><canvas id="chart-activity" aria-label="Actividad anual"></canvas></div>
+          </div>
+          <div class="gh-chart-card">
+            <p class="gh-chart-card__title">Lenguajes por repositorio</p>
+            <div class="gh-chart-wrap gh-chart-wrap--donut"><canvas id="chart-langs" aria-label="Lenguajes"></canvas></div>
+            <ul class="gh-legend" id="chart-langs-legend"></ul>
+          </div>
+          <div class="gh-chart-card">
+            <p class="gh-chart-card__title">Stats de actividad</p>
+            <div class="gh-chart-wrap"><canvas id="chart-stats" aria-label="Stats"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- CONTACT -->
     <section class="contact section" id="contact">
       <div class="container">
-        <span class="section__num" aria-hidden="true">06</span>
+        <span class="section__num" aria-hidden="true">07</span>
         <div class="contact__header reveal-up">
           <p class="section-tag">Hablemos</p>
           <h2 class="contact__title">¿Tienes algo<br/><em>que vale la pena</em><br/>construir?</h2>
@@ -399,6 +448,9 @@
     </div>
   </footer>
 
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
   <script src="js/utils.js"      defer></script>
   <script src="js/loader.js"     defer></script>
   <script src="js/navbar.js"     defer></script>
@@ -410,6 +462,8 @@
   <script src="js/counter.js"    defer></script>
   <script src="js/form.js"       defer></script>
   <script src="js/theme.js"      defer></script>
+  <script src="js/sound.js"      defer></script>
+  <script src="js/github-charts.js" defer></script>
   <script src="js/main.js"       defer></script>
 </body>
 </html>

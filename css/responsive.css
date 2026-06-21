@@ -8,6 +8,15 @@
   .hamburger    { display: flex; }
   .mobile-menu  { display: block; }
 
+  /* GitHub metrics: 3 col */
+  .gh-metrics { grid-template-columns: repeat(3, 1fr); }
+
+  /* GitHub charts: 1 col */
+  .gh-charts {
+    grid-template-columns: 1fr;
+  }
+  .gh-chart-card--wide { grid-column: 1 / 2; }
+
   /* Hero: columna única */
   .hero__body {
     grid-template-columns: 1fr;
@@ -75,6 +84,11 @@
 /* ─── PHONE sm ───────────────────────────── */
 @media (max-width: 767px) {
   .section__num { font-size: clamp(4rem, 18vw, 8rem); right: var(--space-4); }
+
+  /* GitHub metrics: 2 col en móvil */
+  .gh-metrics { grid-template-columns: repeat(2, 1fr); }
+  .gh-chart-wrap { height: 180px; }
+  .gh-chart-wrap--donut { height: 150px; }
 
   .hero__title-bold { font-size: clamp(var(--text-4xl), 14vw, var(--text-6xl)); }
   .hero__title-italic { font-size: clamp(var(--text-2xl), 7vw, var(--text-4xl)); }
