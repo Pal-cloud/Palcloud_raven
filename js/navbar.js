@@ -1,5 +1,5 @@
 /**
- * navbar.js — Comportamiento de la barra de navegación
+ * navbar.js — Navegación: hamburguer overlay fullscreen (siempre visible)
  */
 'use strict';
 
@@ -9,6 +9,7 @@
   const navbar      = $('#navbar');
   const hamburger   = $('#hamburger');
   const mobileMenu  = $('#mobile-menu');
+  const navOverlay  = $('#nav-overlay');
   const navLinks    = $$('.navbar__link');
   const mobileLinks = $$('.mobile-menu__link');
 
@@ -41,34 +42,43 @@
     });
   }
 
-  // ── Hamburger / Mobile menu ─────────────
+  // ── Hamburger / Overlay fullscreen ─────────
   if (hamburger && mobileMenu) {
     hamburger.addEventListener('click', () => {
       const isOpen = hamburger.classList.toggle('open');
       mobileMenu.classList.toggle('open', isOpen);
+      navOverlay?.classList.toggle('open', isOpen);
       hamburger.setAttribute('aria-expanded', String(isOpen));
       mobileMenu.setAttribute('aria-hidden', String(!isOpen));
       document.body.style.overflow = isOpen ? 'hidden' : '';
+
+      // Foco dentro del menú para accesibilidad
+      if (isOpen) {
+        const first = mobileMenu.querySelector('.mobile-menu__link');
+        setTimeout(() => first?.focus(), 80);
+      }
     });
 
-    // Cerrar al hacer click en un link del menú móvil
+    // Cerrar al hacer click en un link del menú
     mobileLinks.forEach((link) => {
       link.addEventListener('click', closeMenu);
     });
 
-    // Cerrar al hacer click fuera
-    document.addEventListener('click', (e) => {
-      if (!navbar.contains(e.target)) closeMenu();
-    });
+    // Cerrar al hacer click en el overlay
+    navOverlay?.addEventListener('click', closeMenu);
   }
 
   function closeMenu() {
     hamburger?.classList.remove('open');
     mobileMenu?.classList.remove('open');
+    navOverlay?.classList.remove('open');
     hamburger?.setAttribute('aria-expanded', 'false');
     mobileMenu?.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
   }
+
+  // Exponer para main.js (Escape key)
+  window._navCloseMenu = closeMenu;
 
   // ── Smooth scroll para links internos ──────
   const allNavLinks = [...navLinks, ...mobileLinks];

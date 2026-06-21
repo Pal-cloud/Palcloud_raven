@@ -5,8 +5,6 @@
 /* ─── TABLET md ──────────────────────────── */
 @media (max-width: 1023px) {
   .navbar__menu { display: none; }
-  .hamburger    { display: flex; }
-  .mobile-menu  { display: block; }
 
   /* GitHub metrics: 3 col */
   .gh-metrics { grid-template-columns: repeat(3, 1fr); }

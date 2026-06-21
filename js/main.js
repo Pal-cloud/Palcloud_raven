@@ -40,15 +40,8 @@
   // ── Keyboard navigation: cerrar menú con Escape ──
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      const mobileMenu = document.getElementById('mobile-menu');
-      const hamburger  = document.getElementById('hamburger');
-
-      if (mobileMenu?.classList.contains('open')) {
-        mobileMenu.classList.remove('open');
-        hamburger?.classList.remove('open');
-        hamburger?.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-        hamburger?.focus();
+      if (typeof window._navCloseMenu === 'function') {
+        window._navCloseMenu();
       }
     }
   });

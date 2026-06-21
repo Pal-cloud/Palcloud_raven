@@ -21,16 +21,6 @@
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/animations.css" />
   <link rel="stylesheet" href="css/responsive.css" />
-
-  <!-- Aplicar tema ANTES de renderizar para evitar flash -->
-  <script>
-    (function() {
-      var saved = localStorage.getItem('palcloud-theme');
-      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      var theme = saved || (prefersDark ? 'dark' : 'light');
-      document.documentElement.dataset.theme = theme;
-    })();
-  </script>
 </head>
 <body data-theme="dark">
 
@@ -63,25 +53,35 @@
         <li><a href="#contact"  class="navbar__link" data-section="contact">Contacto</a></li>
       </ul>
       <div class="navbar__actions">
-        <button class="btn-icon" id="sound-toggle" aria-label="Activar sonido" title="Sonido ambiente">
+        <button class="btn-icon" id="sound-toggle" aria-label="Activar lluvia ambiente" title="Lluvia nocturna · clic para activar">
           <i class="fa-solid fa-volume-xmark" id="sound-icon"></i>
-        </button>
-        <button class="btn-icon" id="theme-toggle" aria-label="Cambiar tema">
-          <i class="fa-solid fa-moon" id="theme-icon"></i>
         </button>
         <button class="hamburger" id="hamburger" aria-label="Abrir menú" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>
       </div>
     </nav>
-    <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+
+    <!-- Overlay oscuro -->
+    <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
+
+    <!-- Menú fullscreen lateral -->
+    <div class="mobile-menu" id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menú de navegación">
       <ul role="list">
-        <li><a href="#about"    class="mobile-menu__link">Manifiesto</a></li>
-        <li><a href="#skills"   class="mobile-menu__link">Oficio</a></li>
-        <li><a href="#projects" class="mobile-menu__link">Obra</a></li>
-        <li><a href="#process"  class="mobile-menu__link">Proceso</a></li>
-        <li><a href="#contact"  class="mobile-menu__link">Contacto</a></li>
+        <li><a href="#about"        class="mobile-menu__link">Manifiesto</a></li>
+        <li><a href="#skills"       class="mobile-menu__link">Oficio</a></li>
+        <li><a href="#projects"     class="mobile-menu__link">Obra</a></li>
+        <li><a href="#process"      class="mobile-menu__link">Proceso</a></li>
+        <li><a href="#github-stats" class="mobile-menu__link">GitHub</a></li>
+        <li><a href="#contact"      class="mobile-menu__link">Contacto</a></li>
       </ul>
+      <div class="mobile-menu__footer">
+        <a href="https://github.com/Pal-cloud" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+        <a href="https://linkedin.com"         target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+        <a href="https://twitter.com"          target="_blank" rel="noopener" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+        <a href="mailto:hola@palcloudraven.dev" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+      </div>
+      <p class="mobile-menu__tagline">código que vuela · diseño que perdura</p>
     </div>
   </header>
 
@@ -129,7 +129,7 @@
             </div>
             <div class="hero__stat-sep" aria-hidden="true">/</div>
             <div class="hero__stat">
-              <span class="hero__stat-n" data-target="36">0</span>
+              <span class="hero__stat-n" data-target="36" data-suffix="+">0</span>
               <span class="hero__stat-l">proyectos</span>
             </div>
             <div class="hero__stat-sep" aria-hidden="true">/</div>
@@ -164,9 +164,9 @@
               <em>experiencias.</em>
             </h2>
             <div class="about__body reveal-up">
-              <p>Soy <strong>Palcloud Raven</strong> — desarrollador y diseñador digital criado entre la lógica del código y la intuición del arte. Creo que un buen producto digital es como un buen poema: cada elemento en su lugar, nada sobrando, todo respirando.</p>
+              <p>Soy <strong>Palcloud Raven</strong> — desarrolladora y diseñadora digital criada entre la lógica del código y la intuición del arte. Creo que un buen producto digital es como un buen poema: cada elemento en su lugar, nada sobrando, todo respirando.</p>
               <p>Me apasiona la intersección entre lo <em>funcional y lo bello</em>. Trabajo con las tecnologías del momento pero nunca olvido que detrás de cada interfaz hay una persona buscando algo.</p>
-              <p>El cuervo — símbolo de inteligencia, adaptación y visión — es mi compañero de vuelo en cada proyecto.</p>
+              <p>El cuervo — símbolo de inteligencia, adaptación y visión — es mi compañera de vuelo en cada proyecto.</p>
             </div>
             <div class="about__chips reveal-up">
               <span class="chip">Clean Code</span>
@@ -451,19 +451,18 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
-  <script src="js/utils.js"      defer></script>
-  <script src="js/loader.js"     defer></script>
-  <script src="js/navbar.js"     defer></script>
-  <script src="js/cursor.js"     defer></script>
-  <script src="js/canvas.js"     defer></script>
-  <script src="js/animations.js" defer></script>
-  <script src="js/skills.js"     defer></script>
-  <script src="js/projects.js"   defer></script>
-  <script src="js/counter.js"    defer></script>
-  <script src="js/form.js"       defer></script>
-  <script src="js/theme.js"      defer></script>
-  <script src="js/sound.js"      defer></script>
+  <script src="js/utils.js"         defer></script>
+  <script src="js/loader.js"        defer></script>
+  <script src="js/navbar.js"        defer></script>
+  <script src="js/cursor.js"        defer></script>
+  <script src="js/canvas.js"        defer></script>
+  <script src="js/animations.js"    defer></script>
+  <script src="js/skills.js"        defer></script>
+  <script src="js/projects.js"      defer></script>
+  <script src="js/counter.js"       defer></script>
+  <script src="js/form.js"          defer></script>
+  <script src="js/sound.js"         defer></script>
   <script src="js/github-charts.js" defer></script>
-  <script src="js/main.js"       defer></script>
+  <script src="js/main.js"          defer></script>
 </body>
 </html>

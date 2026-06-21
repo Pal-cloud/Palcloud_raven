@@ -69,6 +69,12 @@
 .skills__list .skill-row:nth-child(5) { transition-delay: 320ms; }
 .skills__list .skill-row:nth-child(6) { transition-delay: 400ms; }
 
+/* ─── MENU OVERLAY ───────────────────────── */
+@keyframes menuLinkIn {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 /* ─── REDUCED MOTION ─────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

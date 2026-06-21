@@ -1,24 +1,46 @@
 /**
- * github-charts.js — Gráficas GitHub con datos reales de Pal-cloud
- * Usa Chart.js (cargado vía CDN en el HTML)
+ * github-charts.js — Gráficas GitHub con datos REALES de Pal-cloud
+ * API pública de GitHub (sin auth, rate-limit 60req/h).
+ * Fallback a datos estáticos si la API no responde.
  */
 'use strict';
 
 (function initGithubCharts() {
 
+  const GH_USER = 'Pal-cloud';      // ← nombre exacto del perfil
+  const API     = 'https://api.github.com';
+
   // ── Paleta coherente con el diseño ─────
   const GOLD   = 'rgba(201, 168, 76,';
   const CREAM  = 'rgba(240, 230, 200,';
   const MUTED  = 'rgba(139, 122, 101,';
-  const BG     = 'rgba(19, 16, 9,';
 
-  // Colores de lenguajes (extraídos de la imagen)
+  // Colores de lenguajes
   const LANG_COLORS = {
-    Python:          '#5b8dd9',  // azul
-    JavaScript:      '#f0d060',  // amarillo
-    HTML:            '#d9604e',  // rojo
-    TypeScript:      '#7baad9',  // azul claro
-    'Jupyter Notebook': '#e8894e' // naranja
+    Python:              '#5b8dd9',
+    JavaScript:          '#f0d060',
+    HTML:                '#d9604e',
+    TypeScript:          '#7baad9',
+    'Jupyter Notebook':  '#e8894e',
+    CSS:                 '#9b72e8',
+    Shell:               '#6dab7a',
+    'C++':               '#c96d6d',
+    Go:                  '#79c0c6',
+    Rust:                '#e8824e',
+    Other:               '#6b6a67',
+  };
+
+  // Datos de respaldo
+  const FALLBACK = {
+    langPcts: [
+      { name: 'Python',          pct: 42 },
+      { name: 'JavaScript',      pct: 30 },
+      { name: 'HTML',            pct: 10 },
+      { name: 'TypeScript',      pct: 13 },
+      { name: 'Jupyter Notebook', pct: 5 },
+    ],
+    activity: [30, 45, 75, 95, 108, 100, 72, 50, 18, 8, 22, 55],
+    stats: { stars: 9, commits: 209, prs: 39, issues: 30, repos_contrib: 51, repos: 31 },
   };
 
   // ── Defaults globales de Chart.js ─────
@@ -29,22 +51,108 @@
     Chart.defaults.borderColor = 'rgba(201,168,76,0.1)';
   }
 
-  // ── Gráfica 1: Actividad anual (área) ─
-  function buildActivityChart() {
-    const canvas = document.getElementById('chart-activity');
-    if (!canvas || !window.Chart) return;
+  // ── Etiquetas últimos 12 meses ─────────
+  function getLast12Months() {
+    const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const now = new Date();
+    const labels = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      labels.push(months[d.getMonth()] + ' \'' + String(d.getFullYear()).slice(-2));
+    }
+    return labels;
+  }
 
-    // Datos aproximados de la imagen (contribuciones mensuales)
-    // Pico en Oct-Nov, bajada en Feb-Mar, remontada en Jun
-    const labels  = ['Jun\'25','Jul','Ago','Sep','Oct','Nov','Dic','Ene\'26','Feb','Mar','Abr','May','Jun\'26'];
-    const data    = [30, 45, 75, 95, 108, 100, 72, 50, 18, 8, 22, 55, 80];
+  // ─────────────────────────────────────────
+  // FETCH DE DATOS REALES
+  // GitHub REST API pública — no requiere token
+  // ─────────────────────────────────────────
+
+  async function fetchUserData() {
+    const res = await fetch(`${API}/users/${GH_USER}`);
+    if (!res.ok) throw new Error('user');
+    return res.json();
+  }
+
+  async function fetchRepos() {
+    // Hasta 100 repos públicos
+    const res = await fetch(`${API}/users/${GH_USER}/repos?per_page=100&type=owner`);
+    if (!res.ok) throw new Error('repos');
+    return res.json();
+  }
+
+  /**
+   * Suma bytes de lenguajes en todos los repos.
+   * Usa Promise.allSettled para no fallar si algún repo es privado.
+   */
+  async function fetchLanguages(repos) {
+    const results = await Promise.allSettled(
+      repos.slice(0, 30).map(repo =>   // limitamos a 30 para no sobrepasar rate-limit
+        fetch(`${API}/repos/${GH_USER}/${repo.name}/languages`).then(r => r.json())
+      )
+    );
+
+    const totals = {};
+    results.forEach(r => {
+      if (r.status === 'fulfilled' && r.value && !r.value.message) {
+        Object.entries(r.value).forEach(([lang, bytes]) => {
+          totals[lang] = (totals[lang] || 0) + bytes;
+        });
+      }
+    });
+
+    const total = Object.values(totals).reduce((a, b) => a + b, 0) || 1;
+
+    // Top 6 lenguajes + otros
+    const sorted = Object.entries(totals)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6);
+
+    const topTotal = sorted.reduce((a, [,b]) => a + b, 0);
+    const otherPct = Math.round(((total - topTotal) / total) * 100);
+
+    const langs = sorted.map(([name, bytes]) => ({
+      name,
+      pct: Math.round((bytes / total) * 100),
+    }));
+
+    if (otherPct > 1) langs.push({ name: 'Other', pct: otherPct });
+    return langs;
+  }
+
+  /**
+   * Estima actividad mensual contando repos creados/actualizados por mes.
+   * (La API pública no expone el calendario de contribuciones sin auth.)
+   */
+  function buildActivityFromRepos(repos) {
+    const now = new Date();
+    const counts = Array(12).fill(0);
+
+    repos.forEach(repo => {
+      const updated = new Date(repo.pushed_at || repo.updated_at);
+      const diffMonths = (now.getFullYear() - updated.getFullYear()) * 12
+                       + (now.getMonth() - updated.getMonth());
+      if (diffMonths >= 0 && diffMonths < 12) {
+        counts[11 - diffMonths]++;
+      }
+    });
+
+    // Escalar a rango 5-100 para que se vea bien
+    const max = Math.max(...counts, 1);
+    return counts.map(c => Math.max(Math.round((c / max) * 100), c > 0 ? 5 : 0));
+  }
+
+  // ── Gráfica 1: Actividad anual (área) ─────
+  function buildActivityChart(data) {
+    const canvas = document.getElementById('chart-activity');
+    if (!canvas) return;
 
     new Chart(canvas, {
       type: 'line',
       data: {
-        labels,
+        labels: getLast12Months(),
         datasets: [{
-          label: 'Contribuciones',
+          label: 'Actividad',
           data,
           fill: true,
           tension: 0.45,
@@ -75,9 +183,7 @@
             titleColor: `${CREAM} 0.9)`,
             bodyColor: `${MUTED} 0.9)`,
             padding: 12,
-            callbacks: {
-              label: (ctx) => `  ${ctx.parsed.y} contribuciones`
-            }
+            callbacks: { label: (ctx) => `  ${ctx.parsed.y} pushes` }
           }
         },
         scales: {
@@ -89,27 +195,19 @@
             grid: { color: 'rgba(201,168,76,0.05)', drawBorder: false },
             ticks: { color: '#4a3f32' },
             beginAtZero: true,
-            max: 120
           }
         }
       }
     });
   }
 
-  // ── Gráfica 2: Lenguajes (donut) ──────
-  function buildLangsChart() {
+  // ── Gráfica 2: Lenguajes (donut) ───────────
+  function buildLangsChart(langs) {
     const canvas = document.getElementById('chart-langs');
     const legend = document.getElementById('chart-langs-legend');
-    if (!canvas || !window.Chart) return;
+    if (!canvas) return;
 
-    // Porcentajes aproximados de la imagen
-    const langs = [
-      { name: 'Python',          pct: 42 },
-      { name: 'JavaScript',      pct: 30 },
-      { name: 'HTML',            pct: 10 },
-      { name: 'TypeScript',      pct: 13 },
-      { name: 'Jupyter Notebook', pct: 5 },
-    ];
+    const colors = langs.map(l => LANG_COLORS[l.name] || LANG_COLORS.Other);
 
     new Chart(canvas, {
       type: 'doughnut',
@@ -117,8 +215,8 @@
         labels: langs.map(l => l.name),
         datasets: [{
           data: langs.map(l => l.pct),
-          backgroundColor: langs.map(l => LANG_COLORS[l.name] + 'cc'),
-          borderColor:     langs.map(l => LANG_COLORS[l.name]),
+          backgroundColor: colors.map(c => c + 'cc'),
+          borderColor:     colors,
           borderWidth: 2,
           hoverOffset: 12,
         }]
@@ -136,19 +234,16 @@
             titleColor: `${CREAM} 0.9)`,
             bodyColor: `${MUTED} 0.9)`,
             padding: 12,
-            callbacks: {
-              label: (ctx) => `  ${ctx.parsed}%`
-            }
+            callbacks: { label: (ctx) => `  ${ctx.parsed}%` }
           }
         }
       }
     });
 
-    // Leyenda manual con estilos del portfolio
     if (legend) {
-      legend.innerHTML = langs.map(l => `
+      legend.innerHTML = langs.map((l, i) => `
         <li>
-          <span class="gh-legend__dot" style="background:${LANG_COLORS[l.name]}"></span>
+          <span class="gh-legend__dot" style="background:${colors[i]}"></span>
           <span class="gh-legend__name">${l.name}</span>
           <span class="gh-legend__pct">${l.pct}%</span>
         </li>
@@ -156,14 +251,20 @@
     }
   }
 
-  // ── Gráfica 3: Stats (barras horiz.) ──
-  function buildStatsChart() {
+  // ── Gráfica 3: Stats (barras horiz.) ───────
+  function buildStatsChart(stats) {
     const canvas = document.getElementById('chart-stats');
-    if (!canvas || !window.Chart) return;
+    if (!canvas) return;
 
-    const labels = ['Total Stars', 'Commits 2026', 'Total PRs', 'Total Issues', 'Repos contrib.'];
-    const data   = [9, 209, 39, 30, 51];
-    const maxVal = Math.max(...data);
+    const labels = ['Estrellas', 'Commits 2026', 'Pull Requests', 'Issues', 'Repos contrib.'];
+    const data   = [
+      stats.stars,
+      stats.commits,
+      stats.prs,
+      stats.issues,
+      stats.repos_contrib,
+    ];
+    const maxVal = Math.max(...data, 1);
 
     new Chart(canvas, {
       type: 'bar',
@@ -205,27 +306,92 @@
           },
           y: {
             grid: { display: false, drawBorder: false },
-            ticks: {
-              color: '#8b7a65',
-              font: { size: 10, family: "'Space Mono', monospace" }
-            }
+            ticks: { color: '#8b7a65', font: { size: 10, family: "'Space Mono', monospace" } }
           }
         }
       }
     });
   }
 
-  // ── Arrancar cuando el DOM esté listo ─
-  function init() {
+  // ── Actualizar contadores del DOM ───────────
+  function updateMetrics(userData, repos, stats) {
+    const metricMap = {
+      // data-target → valor real
+      repos_pub:    userData?.public_repos ?? stats.repos,
+    };
+
+    // Actualizar nodos con data-gh
+    document.querySelectorAll('[data-gh]').forEach(el => {
+      const key = el.dataset.gh;
+      if (metricMap[key] !== undefined) {
+        el.dataset.target = metricMap[key];
+        el.textContent = '0';
+      }
+    });
+
+    // Recount: sumar estrellas de todos los repos
+    const totalStars = repos.reduce((acc, r) => acc + (r.stargazers_count || 0), 0);
+    document.querySelectorAll('.gh-metric__n').forEach(el => {
+      const label = el.nextElementSibling?.textContent?.toLowerCase() ?? '';
+      if (label.includes('repos') && label.includes('público')) {
+        el.dataset.target = userData?.public_repos ?? stats.repos;
+      }
+      if (label.includes('estrella')) {
+        el.dataset.target = totalStars || stats.stars;
+      }
+    });
+  }
+
+  // ── Añadir badge "en vivo" si la API respondió ──
+  function markAsLive() {
+    const tag = document.querySelector('#github-stats .section-tag');
+    if (tag && !tag.querySelector('.gh-live')) {
+      const badge = document.createElement('span');
+      badge.className = 'gh-live';
+      badge.innerHTML = '<span class="dot dot--green" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#6dab7a;margin-right:5px;vertical-align:middle;"></span>en vivo';
+      badge.style.cssText = 'font-size:0.6rem;letter-spacing:0.15em;opacity:0.7;margin-left:var(--space-4);';
+      tag.appendChild(badge);
+    }
+  }
+
+  // ── Orquestador principal ───────────────────
+  async function init() {
     if (typeof Chart === 'undefined') {
-      // Reintentar si Chart.js aún no cargó
       setTimeout(init, 300);
       return;
     }
     setChartDefaults();
-    buildActivityChart();
-    buildLangsChart();
-    buildStatsChart();
+
+    let activityData = FALLBACK.activity;
+    let langsData    = FALLBACK.langPcts;
+    let statsData    = FALLBACK.stats;
+    let isLive       = false;
+
+    try {
+      const [userData, repos] = await Promise.all([fetchUserData(), fetchRepos()]);
+      statsData.repos = userData.public_repos;
+
+      const langs      = await fetchLanguages(repos);
+      activityData     = buildActivityFromRepos(repos);
+
+      if (langs.length > 0) langsData = langs;
+
+      // Total de estrellas acumuladas
+      statsData.stars = repos.reduce((acc, r) => acc + (r.stargazers_count || 0), 0);
+
+      // Actualizar métricas del DOM
+      updateMetrics(userData, repos, statsData);
+
+      isLive = true;
+    } catch (err) {
+      console.warn('[PalCloud] GitHub API fallback →', err.message ?? err);
+    }
+
+    buildActivityChart(activityData);
+    buildLangsChart(langsData);
+    buildStatsChart(statsData);
+
+    if (isLive) markAsLive();
   }
 
   // Observar cuando la sección entra en viewport (lazy render)
@@ -241,7 +407,6 @@
     }, { threshold: 0.1 });
     observer.observe(section);
   } else {
-    // fallback si no hay sección
     document.addEventListener('DOMContentLoaded', init);
   }
 

@@ -1,217 +1,233 @@
 /**
- * sound.js — Ambiente sonoro generado con Web Audio API
- * Sonido: viento suave + lluvia tenue + nota dron oscura
- * Todo sintetizado, sin archivos externos
+ * sound.js — Lluvia nocturna bohemia
+ * Técnica: ruido blanco filtrado para lluvia + gotas individuales
+ *          + pad drone muy suave de fondo + reverb de sala
+ * Sin síntesis de cuervo, sin pad estridente — solo agua y noche.
  */
 'use strict';
 
 (function initSound() {
   const btn  = document.getElementById('sound-toggle');
   const icon = document.getElementById('sound-icon');
-
   if (!btn) return;
 
-  let audioCtx   = null;
-  let masterGain = null;
-  let nodes      = [];
-  let isPlaying  = false;
-  let fadeTimer  = null;
+  let ctx       = null;
+  let master    = null;
+  let isPlaying = false;
+  let stopFns   = [];
 
-  // ── Crear contexto y sonidos ────────────
-  function buildAudio() {
-    audioCtx   = new (window.AudioContext || window.webkitAudioContext)();
-    masterGain = audioCtx.createGain();
-    masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
-    masterGain.connect(audioCtx.destination);
+  // ─── Construir el grafo de audio ───────────
+  function build() {
+    ctx    = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain();
+    master.gain.setValueAtTime(0, ctx.currentTime);
+    master.connect(ctx.destination);
 
-    nodes = [
-      createWind(),
-      createRain(),
-      createDrone(55),   // La1 grave — misterioso
-      createDrone(82.4), // Mi2 — tensión
+    const reverb = makeReverb(ctx, 4, 2.8, 0.3);
+
+    // Bus seco y húmedo compartidos
+    const dryBus = ctx.createGain();
+    dryBus.gain.value = 0.6;
+    dryBus.connect(master);
+
+    const wetBus = ctx.createGain();
+    wetBus.gain.value = 0.4;
+    reverb.connect(wetBus);
+    wetBus.connect(master);
+
+    // 1 · LLUVIA: ruido blanco filtrado en bandas
+    const rainStop = buildRain(dryBus, wetBus);
+
+    // 2 · GOTAS: pings aleatorios de resonancia
+    const dropStop = buildDrops(wetBus);
+
+    // 3 · DRONE: pad de fondo muy suave (La menor, p=0.02)
+    const droneStop = buildDrone(wetBus);
+
+    stopFns = [rainStop, dropStop, droneStop];
+  }
+
+  // ─── LLUVIA: varias capas de ruido filtrado ──
+  function buildRain(dry, wet) {
+    const buffers = [
+      { freq: 800,  q: 1.5,  gain: 0.18 },   // lluvia fina
+      { freq: 2200, q: 0.8,  gain: 0.10 },   // salpicaduras
+      { freq: 320,  q: 2.0,  gain: 0.08 },   // graves de fondo
     ];
+
+    const nodes = buffers.map(({ freq, q, gain: g }) => {
+      const buf = makeNoiseBuffer(ctx, 4);    // 4s de ruido blanco
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'bandpass';
+      filt.frequency.value = freq;
+      filt.Q.value = q;
+
+      // LFO muy lento sobre el filtro → sensación de ráfaga
+      const lfo = ctx.createOscillator();
+      lfo.type = 'sine';
+      lfo.frequency.value = 0.08 + Math.random() * 0.06;
+      const lfoG = ctx.createGain();
+      lfoG.gain.value = freq * 0.15;
+      lfo.connect(lfoG);
+      lfoG.connect(filt.frequency);
+      lfo.start();
+
+      const vol = ctx.createGain();
+      vol.gain.value = g;
+
+      src.connect(filt);
+      filt.connect(vol);
+      vol.connect(dry);
+      vol.connect(wet);
+
+      src.start();
+
+      return () => { try { src.stop(); lfo.stop(); } catch(_){} };
+    });
+
+    return () => nodes.forEach(f => f());
   }
 
-  // ── Viento: ruido blanco filtrado ──────
-  function createWind() {
-    const bufferSize = audioCtx.sampleRate * 4;
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data   = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1);
+  // ─── GOTAS: impulsos resonantes aleatorios ──
+  function buildDrops(wet) {
+    let timer = null;
+
+    function scheduleNext() {
+      const delay = 80 + Math.random() * 600;  // entre 80ms y 680ms
+      timer = setTimeout(playDrop, delay);
     }
 
-    const src = audioCtx.createBufferSource();
-    src.buffer = buffer;
-    src.loop   = true;
+    function playDrop() {
+      if (!isPlaying) return;
 
-    // Filtro pasa-bajas → suaviza el viento
-    const low = audioCtx.createBiquadFilter();
-    low.type = 'lowpass';
-    low.frequency.value = 400;
-    low.Q.value = 0.5;
+      // Frecuencia de la gota: alta, random
+      const freq = 900 + Math.random() * 1800;
 
-    // Filtro pasa-altas → quita el DC
-    const high = audioCtx.createBiquadFilter();
-    high.type = 'highpass';
-    high.frequency.value = 80;
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.4, ctx.currentTime + 0.25);
 
-    // Ganancia suave
-    const g = audioCtx.createGain();
-    g.gain.value = 0.12;
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0.0001, ctx.currentTime);
+      env.gain.linearRampToValueAtTime(0.045, ctx.currentTime + 0.005);
+      env.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3);
 
-    // LFO para variación de viento
-    const lfo = audioCtx.createOscillator();
-    lfo.frequency.value = 0.08; // muy lento
-    lfo.type = 'sine';
-    const lfoGain = audioCtx.createGain();
-    lfoGain.gain.value = 0.06;
-    lfo.connect(lfoGain);
-    lfoGain.connect(g.gain);
-    lfo.start();
+      osc.connect(env);
+      env.connect(wet);
 
-    src.connect(high);
-    high.connect(low);
-    low.connect(g);
-    g.connect(masterGain);
-    src.start();
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.35);
 
-    return { src, lfo };
-  }
-
-  // ── Lluvia: ruido rosa ─────────────────
-  function createRain() {
-    const bufferSize = audioCtx.sampleRate * 2;
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data   = buffer.getChannelData(0);
-
-    // Ruido rosa (aproximado)
-    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
-    for (let i = 0; i < bufferSize; i++) {
-      const white = Math.random() * 2 - 1;
-      b0 = 0.99886*b0 + white*0.0555179;
-      b1 = 0.99332*b1 + white*0.0750759;
-      b2 = 0.96900*b2 + white*0.1538520;
-      b3 = 0.86650*b3 + white*0.3104856;
-      b4 = 0.55000*b4 + white*0.5329522;
-      b5 = -0.7616*b5 - white*0.0168980;
-      data[i] = (b0+b1+b2+b3+b4+b5+b6+white*0.5362) * 0.11;
-      b6 = white * 0.115926;
+      scheduleNext();
     }
 
-    const src = audioCtx.createBufferSource();
-    src.buffer = buffer;
-    src.loop   = true;
-
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'highpass';
-    filter.frequency.value = 1200;
-    filter.Q.value = 0.3;
-
-    const g = audioCtx.createGain();
-    g.gain.value = 0.06;
-
-    src.connect(filter);
-    filter.connect(g);
-    g.connect(masterGain);
-    src.start();
-
-    return { src };
+    scheduleNext();
+    return () => { clearTimeout(timer); timer = null; };
   }
 
-  // ── Dron: oscilador de baja frecuencia ─
-  function createDrone(freq) {
-    const osc = audioCtx.createOscillator();
-    osc.type = 'sawtooth';
-    osc.frequency.value = freq;
+  // ─── DRONE: pad sine muy suave de fondo ─────
+  function buildDrone(wet) {
+    const CHORD = [110, 130.8, 164.8, 220];  // La menor, muy bajo
+    const oscs = CHORD.map((freq, i) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
 
-    // Reverb simple via convolución
-    const convolver = audioCtx.createConvolver();
-    convolver.buffer = makeReverb(audioCtx, 3, 2);
+      const ampLFO = ctx.createOscillator();
+      ampLFO.type = 'sine';
+      ampLFO.frequency.value = 0.03 + i * 0.005;
+      const lfoG = ctx.createGain();
+      lfoG.gain.value = 0.008;
+      ampLFO.connect(lfoG);
 
-    const g = audioCtx.createGain();
-    g.gain.value = 0.018;
+      const vol = ctx.createGain();
+      vol.gain.value = 0.015 - i * 0.002;
+      lfoG.connect(vol.gain);
 
-    // Filtro para suavizar el sawtooth
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 300;
-    filter.Q.value = 1;
+      osc.connect(vol);
+      vol.connect(wet);
 
-    // Vibrato muy sutil
-    const vib = audioCtx.createOscillator();
-    vib.frequency.value = 0.3;
-    const vibGain = audioCtx.createGain();
-    vibGain.gain.value = 0.5;
-    vib.connect(vibGain);
-    vibGain.connect(osc.frequency);
-    vib.start();
+      osc.start();
+      ampLFO.start();
 
-    osc.connect(filter);
-    filter.connect(convolver);
-    convolver.connect(g);
-    g.connect(masterGain);
-    osc.start();
+      return () => { try { osc.stop(); ampLFO.stop(); } catch(_){} };
+    });
 
-    return { osc, vib };
+    return () => oscs.forEach(f => f());
   }
 
-  // ── Reverb sintético ───────────────────
-  function makeReverb(ctx, duration, decay) {
-    const sampleRate = ctx.sampleRate;
-    const length     = sampleRate * duration;
-    const impulse    = ctx.createBuffer(2, length, sampleRate);
-    for (let ch = 0; ch < 2; ch++) {
-      const d = impulse.getChannelData(ch);
-      for (let i = 0; i < length; i++) {
-        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+  // ─── Reverb de placa ────────────────────────
+  function makeReverb(ctx, seconds, decay, wet) {
+    const conv = ctx.createConvolver();
+    const len  = ctx.sampleRate * seconds;
+    const ir   = ctx.createBuffer(2, len, ctx.sampleRate);
+
+    for (let c = 0; c < 2; c++) {
+      const chan = ir.getChannelData(c);
+      for (let i = 0; i < len; i++) {
+        chan[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
       }
     }
-    return impulse;
+    conv.buffer = ir;
+    return conv;
   }
 
-  // ── Fade in / out ─────────────────────
+  // ─── Buffer de ruido blanco ─────────────────
+  function makeNoiseBuffer(ctx, seconds) {
+    const len = ctx.sampleRate * seconds;
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const ch  = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+    return buf;
+  }
+
+  // ─── Fade in / out ──────────────────────────
   function fadeIn() {
-    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
-    masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
-    masterGain.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 2.5);
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+    master.gain.linearRampToValueAtTime(0.72, ctx.currentTime + 2.5);
   }
 
   function fadeOut(cb) {
-    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
-    masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
-    masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.5);
-    clearTimeout(fadeTimer);
-    fadeTimer = setTimeout(cb, 1600);
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+    master.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.8);
+    setTimeout(() => {
+      stopFns.forEach(f => f());
+      stopFns = [];
+      ctx.close();
+      ctx = null;
+      master = null;
+      cb?.();
+    }, 2000);
   }
 
-  // ── Toggle ─────────────────────────────
-  btn.addEventListener('click', () => {
-    // Primera interacción: construir audio
-    if (!audioCtx) buildAudio();
-
-    // Reanudar contexto suspendido (política de autoplay)
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-
+  // ─── Toggle ─────────────────────────────────
+  btn.addEventListener('click', async () => {
     if (!isPlaying) {
+      // Primer click: construir y arrancar
+      if (!ctx) build();
+
+      // Reanudar si el contexto está suspendido (autoplay policy)
+      if (ctx.state === 'suspended') await ctx.resume();
+
+      fadeIn();
       isPlaying = true;
       icon.className = 'fa-solid fa-volume-high';
-      btn.setAttribute('aria-label', 'Silenciar');
-      btn.classList.add('sound-active');
-      fadeIn();
+      btn.title = 'Silenciar sonido';
+      btn.setAttribute('aria-label', 'Silenciar sonido');
     } else {
       isPlaying = false;
       icon.className = 'fa-solid fa-volume-xmark';
+      btn.title = 'Activar sonido';
       btn.setAttribute('aria-label', 'Activar sonido');
-      btn.classList.remove('sound-active');
-      fadeOut(() => {});
+      fadeOut();
     }
   });
 
-  // Icono de tooltip pulsante cuando está silenciado
-  setTimeout(() => {
-    if (!isPlaying && btn) {
-      btn.title = 'Activar ambiente sonoro';
-    }
-  }, 3000);
 })();

@@ -215,12 +215,26 @@ body {
 
 .navbar__actions { display: flex; gap: var(--space-3); align-items: center; }
 
-/* Hamburger */
+/* El menú horizontal está oculto — la navegación es siempre mediante el hamburger overlay */
+.navbar__menu { display: none; }
+
+/* Hamburger — siempre visible */
 .hamburger {
-  display: none;
+  display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 5px;
   padding: var(--space-2);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+  position: relative;
+  z-index: calc(var(--z-modal) + 10);
+}
+
+.hamburger:hover {
+  background: rgba(201,168,76,0.08);
 }
 
 .hamburger span {
@@ -232,43 +246,188 @@ body {
   transform-origin: center;
 }
 
+.hamburger span:nth-child(2) { width: 14px; }
+
+.hamburger:hover span:nth-child(2) { width: 22px; }
+
 .hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
-.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(2) { opacity: 0; width: 22px; }
 .hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 
-/* Mobile menu */
-.mobile-menu {
-  display: none;
+/* ── OVERLAY FULLSCREEN ─────────────────── */
+/* Overlay oscuro detrás del menú */
+.nav-overlay {
   position: fixed;
-  top: var(--navbar-h);
-  left: 0;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: rgba(13, 11, 7, 0.0);
+  pointer-events: none;
+  transition: background 0.5s ease;
+}
+
+.nav-overlay.open {
+  background: rgba(13, 11, 7, 0.85);
+  pointer-events: auto;
+}
+
+/* Panel lateral / fullscreen */
+.mobile-menu {
+  position: fixed;
+  top: 0;
   right: 0;
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border);
-  padding: var(--space-6) var(--container-pad) var(--space-8);
-  transform: translateY(-100%);
+  bottom: 0;
+  width: min(420px, 100vw);
+  z-index: calc(var(--z-modal) + 5);
+  background: var(--bg-card);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: var(--navbar-h) var(--space-10) var(--space-12);
+  transform: translateX(100%);
   opacity: 0;
-  transition: transform var(--transition-slow), opacity var(--transition-base);
+  visibility: hidden;
+  transition:
+    transform 0.55s cubic-bezier(0.76,0,0.24,1),
+    opacity   0.35s ease,
+    visibility 0.55s;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .mobile-menu.open {
-  transform: translateY(0);
+  transform: translateX(0);
   opacity: 1;
+  visibility: visible;
+}
+
+/* Decoración interna del panel */
+.mobile-menu::before {
+  content: 'RAVEN';
+  position: absolute;
+  bottom: var(--space-10);
+  right: var(--space-6);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(3rem, 10vw, 6rem);
+  font-weight: 700;
+  font-style: italic;
+  color: var(--text-ghost);
+  -webkit-text-stroke: 1px rgba(201,168,76,0.06);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Links del menú — estilo editorial grande */
+.mobile-menu ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+  justify-content: center;
 }
 
 .mobile-menu__link {
   display: block;
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: var(--text-3xl);
+  font-size: clamp(var(--text-4xl), 7vw, var(--text-5xl));
   font-weight: 300;
   font-style: italic;
-  color: var(--text-secondary);
-  padding: var(--space-3) 0;
+  color: var(--text-muted);
+  padding: var(--space-4) 0;
   border-bottom: 1px solid var(--border-subtle);
-  transition: color var(--transition-base), padding-left var(--transition-base);
+  transition:
+    color    var(--transition-base),
+    padding-left var(--transition-base),
+    opacity  var(--transition-base);
+  position: relative;
+  overflow: hidden;
 }
 
-.mobile-menu__link:hover { color: var(--accent-light); padding-left: var(--space-4); }
+.mobile-menu__link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform var(--transition-base);
+}
+
+.mobile-menu__link:hover {
+  color: var(--accent-light);
+  padding-left: var(--space-6);
+}
+
+.mobile-menu__link:hover::before {
+  transform: scaleY(1);
+}
+
+/* Número de orden decorativo */
+.mobile-menu li {
+  counter-increment: menu-counter;
+  position: relative;
+}
+
+.mobile-menu li::after {
+  content: '0' counter(menu-counter);
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Space Mono', monospace;
+  font-size: var(--text-xs);
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.mobile-menu ul { counter-reset: menu-counter; }
+
+/* Stagger de entrada para links */
+.mobile-menu.open .mobile-menu__link {
+  animation: menuLinkIn var(--transition-slow) both;
+}
+
+.mobile-menu li:nth-child(1) .mobile-menu__link { animation-delay: 80ms; }
+.mobile-menu li:nth-child(2) .mobile-menu__link { animation-delay: 140ms; }
+.mobile-menu li:nth-child(3) .mobile-menu__link { animation-delay: 200ms; }
+.mobile-menu li:nth-child(4) .mobile-menu__link { animation-delay: 260ms; }
+.mobile-menu li:nth-child(5) .mobile-menu__link { animation-delay: 320ms; }
+
+/* Bloque social/footer dentro del menú */
+.mobile-menu__footer {
+  margin-top: var(--space-10);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.mobile-menu__footer a {
+  color: var(--text-muted);
+  font-size: var(--text-lg);
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+.mobile-menu__footer a:hover {
+  color: var(--accent-light);
+  transform: translateY(-2px);
+}
+
+.mobile-menu__tagline {
+  font-family: 'Space Mono', monospace;
+  font-size: var(--text-xs);
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  margin-top: var(--space-4);
+  opacity: 0.5;
+}
 
 /* ─── HERO ───────────────────────────────── */
 .hero {

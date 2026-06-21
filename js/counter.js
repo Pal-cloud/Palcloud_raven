@@ -1,40 +1,37 @@
 /**
- * counter.js — Animación de contadores numéricos del hero
+ * counter.js — Animación de contadores numéricos
+ * Selectors: .hero__stat-n y .gh-metric__n (ambos con data_target)
  */
 'use strict';
 
 (function initCounter() {
   const { prefersReducedMotion } = window.PalcloudUtils;
 
-  const counterEls = document.querySelectorAll('.stat-card__number[data-target]');
+  // Recoge TODOS los contadores del hero y de la sección GitHub
+  const counterEls = document.querySelectorAll(
+    '.hero__stat-n[data-target], .gh-metric__n[data-target]'
+  );
   if (!counterEls.length) return;
 
   function animateCounter(el) {
     const target   = parseInt(el.dataset.target, 10);
-    const duration = 1800;
+    const duration = 2000;
     const start    = performance.now();
 
-    // Sin animación si el usuario lo prefiere
     if (prefersReducedMotion()) {
-      el.textContent = target + (el.closest('.stat-card')?.textContent.includes('%') ? '' : '+');
+      el.textContent = target + (el.dataset.suffix || '');
       return;
     }
 
     function update(now) {
-      const elapsed = now - start;
+      const elapsed  = now - start;
       const progress = Math.min(elapsed / duration, 1);
-
-      // Ease out cubic
-      const ease = 1 - Math.pow(1 - progress, 3);
-      const current = Math.round(ease * target);
-
-      el.textContent = current;
-
-      if (progress < 1) {
-        requestAnimationFrame(update);
-      } else {
-        el.textContent = target;
-      }
+      // Ease out quart — más espectacular en números grandes
+      const ease    = 1 - Math.pow(1 - progress, 4);
+      const val     = Math.round(ease * target);
+      el.textContent = val + (progress < 1 ? '' : (el.dataset.suffix || ''));
+      if (progress < 1) requestAnimationFrame(update);
+      else el.textContent = target + (el.dataset.suffix || '');
     }
 
     requestAnimationFrame(update);
@@ -49,7 +46,7 @@
         }
       });
     },
-    { threshold: 0.5 }
+    { threshold: 0.4 }
   );
 
   counterEls.forEach((el) => observer.observe(el));
