@@ -20,15 +20,15 @@
 
   // ── Configuración ──────────────────────
   const CONFIG = {
-    particleCount:  60,
-    minRadius:      1,
-    maxRadius:      2.5,
-    minSpeed:       0.15,
-    maxSpeed:       0.45,
-    connectionDist: 130,
-    colorAccent:    [155, 93, 229],   // purple
-    colorSecondary: [255, 121, 198],  // pink
-    opacity:        0.55
+    particleCount:  45,
+    minRadius:      0.8,
+    maxRadius:      2,
+    minSpeed:       0.1,
+    maxSpeed:       0.35,
+    connectionDist: 110,
+    colorAccent:    [201, 168, 76],   // gold
+    colorSecondary: [240, 230, 200],  // cream
+    opacity:        0.5
   };
 
   let particles = [];

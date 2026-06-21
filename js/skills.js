@@ -30,7 +30,7 @@
         panel.classList.toggle('active', isActive);
 
         if (isActive) {
-          // Re-observar las nuevas skill cards del panel activo
+          // Re-observar las nuevas skill rows del panel activo
           panel.querySelectorAll('.reveal-up').forEach((el) => {
             el.classList.remove('visible');
           });
@@ -48,7 +48,7 @@
 
   // ── Animación de barras de progreso ───
   function animateBars(container) {
-    container.querySelectorAll('.skill-card__fill[data-pct]').forEach((bar) => {
+    container.querySelectorAll('.skill-row__fill[data-pct], .skill-card__fill[data-pct]').forEach((bar) => {
       const pct = bar.dataset.pct || 0;
       bar.style.width = '0%';
       // Pequeño delay para que se vea la animación
