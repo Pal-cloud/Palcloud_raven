@@ -183,9 +183,9 @@ const PalSound = (() => {
   function isEnabled()   { return _enabled; }
 
   /**
-   * Cuervo sintético — graznido oscuro y expresivo
-   * Técnica: barrido de frecuencia FM con modulador de ruido,
-   *          seguido de un segundo "craw" más corto
+   * Pájaro sintético — gorjeo breve y natural (dos silbidos ascendentes)
+   * Técnica: oscilador seno con barrido de frecuencia suave +
+   *          vibrato rápido para dar "aleteo" y un toque de reverb corto.
    */
   function raven() {
     if (!_enabled) return;
@@ -193,76 +193,77 @@ const PalSound = (() => {
       const ac  = ctx();
       const now = ac.currentTime;
 
-      // Reverb largo para el cuervo
-      const ravenRev = (() => {
-        const len = ac.sampleRate * 1.8;
-        const ir  = ac.createBuffer(2, len, ac.sampleRate);
-        for (let c = 0; c < 2; c++) {
-          const ch = ir.getChannelData(c);
-          for (let i = 0; i < len; i++)
-            ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 1.8);
-        }
-        const conv = ac.createConvolver();
-        conv.buffer = ir;
-        return conv;
-      })();
+      const masterOut = ac.createGain();
+      masterOut.gain.value = VOL * 1.1;
+      masterOut.connect(ac.destination);
 
-      const out = ac.createGain();
-      out.gain.value = VOL * 1.6;
-      out.connect(ac.destination);
-
+      // Reverb muy corto — sala pequeña
+      const revBuf = ac.createBuffer(2, ac.sampleRate * 0.35, ac.sampleRate);
+      for (let c = 0; c < 2; c++) {
+        const ch = revBuf.getChannelData(c);
+        for (let i = 0; i < ch.length; i++)
+          ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / ch.length, 4);
+      }
+      const conv = ac.createConvolver();
+      conv.buffer = revBuf;
       const revG = ac.createGain();
-      revG.gain.value = VOL * 0.5;
-      ravenRev.connect(revG);
+      revG.gain.value = 0.18;
+      conv.connect(revG);
       revG.connect(ac.destination);
 
-      // Función para un solo graznido
-      function caw(startTime, pitchBase, duration, vol) {
-        // Portador
-        const carrier = ac.createOscillator();
-        carrier.type  = 'sawtooth';
-        carrier.frequency.setValueAtTime(pitchBase * 0.9, startTime);
-        carrier.frequency.linearRampToValueAtTime(pitchBase * 1.35, startTime + duration * 0.3);
-        carrier.frequency.linearRampToValueAtTime(pitchBase * 0.75, startTime + duration * 0.85);
-        carrier.frequency.linearRampToValueAtTime(pitchBase * 0.5,  startTime + duration);
+      /**
+       * Un único silbido de pájaro
+       * @param {number} t        - tiempo de inicio
+       * @param {number} f0       - frecuencia inicial (Hz)
+       * @param {number} f1       - frecuencia pico
+       * @param {number} f2       - frecuencia final (descenso)
+       * @param {number} dur      - duración total (s)
+       * @param {number} vol      - amplitud (0-1)
+       */
+      function chirp(t, f0, f1, f2, dur, vol) {
+        // Portador — sine puro para timbre limpio
+        const osc = ac.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f0, t);
+        osc.frequency.linearRampToValueAtTime(f1, t + dur * 0.45);
+        osc.frequency.linearRampToValueAtTime(f2, t + dur);
 
-        // Modulador FM — añade aspereza de cuervo
-        const mod    = ac.createOscillator();
-        mod.type     = 'sine';
-        mod.frequency.value = pitchBase * 2.1;
-        const modGain = ac.createGain();
-        modGain.gain.setValueAtTime(pitchBase * 3, startTime);
-        modGain.gain.linearRampToValueAtTime(pitchBase * 0.5, startTime + duration);
-        mod.connect(modGain);
-        modGain.connect(carrier.frequency);
+        // Vibrato sutil (≈ 18 Hz, depth pequeño) — da "vida" al sonido
+        const vibLfo = ac.createOscillator();
+        vibLfo.type = 'sine';
+        vibLfo.frequency.value = 18;
+        const vibGain = ac.createGain();
+        vibGain.gain.value = f1 * 0.018;
+        vibLfo.connect(vibGain);
+        vibGain.connect(osc.frequency);
 
-        // Filtro paso-bajas para suavizar serrillos extremos
-        const lp = ac.createBiquadFilter();
-        lp.type = 'lowpass';
-        lp.frequency.setValueAtTime(1800, startTime);
-        lp.frequency.linearRampToValueAtTime(900, startTime + duration);
-        lp.Q.value = 1.5;
+        // Filtro bandpass centrado en el pico — recorta armónicos extraños
+        const bp = ac.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.value = f1;
+        bp.Q.value = 0.8;
 
-        // Envolvente
+        // Envolvente: ataque muy rápido, caída suave
         const env = ac.createGain();
-        env.gain.setValueAtTime(0.0001, startTime);
-        env.gain.linearRampToValueAtTime(vol, startTime + 0.02);
-        env.gain.setValueAtTime(vol,          startTime + duration * 0.7);
-        env.gain.exponentialRampToValueAtTime(0.0001, startTime + duration + 0.05);
+        env.gain.setValueAtTime(0.0001, t);
+        env.gain.linearRampToValueAtTime(vol,    t + 0.012);
+        env.gain.setValueAtTime(vol * 0.85,      t + dur * 0.55);
+        env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
 
-        carrier.connect(lp);
-        lp.connect(env);
-        env.connect(out);
-        env.connect(ravenRev);
+        osc.connect(bp);
+        bp.connect(env);
+        env.connect(masterOut);
+        env.connect(conv);
 
-        carrier.start(startTime); mod.start(startTime);
-        carrier.stop(startTime + duration + 0.1);
-        mod.stop(startTime + duration + 0.1);
+        osc.start(t);   vibLfo.start(t);
+        osc.stop(t + dur + 0.04);
+        vibLfo.stop(t + dur + 0.04);
       }
 
-      // Dos graznidos — el segundo más corto y agudo
-      caw(now,        280, 0.38, 0.9);
-      caw(now + 0.52, 310, 0.26, 0.65);
+      // Primer gorjeo: ascendente y brillante
+      chirp(now,        2400, 3800, 2800, 0.13, 0.80);
+      // Segundo gorjeo: ligeramente más agudo y muy breve — eco natural
+      chirp(now + 0.17, 2700, 4100, 3100, 0.10, 0.55);
 
     } catch (_) {}
   }
